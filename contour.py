@@ -24,7 +24,7 @@ def draw(img, vertices, color):
   vertex_count = len(vertices)
   for i in range(vertex_count - 1):
     cv2.circle(img, vertices[i].tuple(), 2, color, -1)
-    cv2.line(img, vertices[i].tuple(), vertices[i+1].tuple(), color, 1)
+    cv2.line(img, vertices[i].tuple(), vertices[i + 1].tuple(), color, 1)
   cv2.line(img, vertices[vertex_count - 1].tuple(), vertices[0].tuple(), color, 1) # Draw line from last vertex to the first one.
 
 def rand_color():
@@ -35,7 +35,7 @@ def rand_color():
 
 def main(argv):
   img = cv2.imread('/Users/mapfap/Desktop/test3.jpg')
-  img = cv2.resize(img, (int(img.shape[1]*0.5), int(img.shape[0]*0.5)))
+  img = cv2.resize(img, (int(img.shape[1] * 0.5), int(img.shape[0] * 0.5)))
   gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
   # kernel = np.ones((2, 2), np.uint8)
@@ -47,14 +47,14 @@ def main(argv):
 
   # Canny edge detector
   thresh = 0
-  edges = cv2.Canny(erosion, thresh, thresh*2)
+  edges = cv2.Canny(erosion, thresh, thresh * 2)
 
   contours,hierarchy = cv2.findContours(edges, cv2.cv.CV_RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
   # contours,hierarchy = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
   for b,cnt in enumerate(contours):
     if hierarchy[0,b,3] == -1:
-      approx = cv2.approxPolyDP(cnt,0.015*cv2.arcLength(cnt,True), True)
+      approx = cv2.approxPolyDP(cnt, 0.015 * cv2.arcLength(cnt, True), True)
       vertices = get_vertices(approx)
       area = polygon_area(vertices)
       print "area=%d, vertices=%d" % (area, len(vertices))
