@@ -42,7 +42,9 @@ def get_vertices(approx):
     vertices.append(Point(approx[i][0][0], approx[i][0][1]))
   return vertices
 
-def draw(img, vertices, color, polygon, name):
+def draw(img, component, color):
+  vertices = component.vertices
+
   vertex_count = len(vertices)
   for i in range(vertex_count - 1):
     cv2.circle(img, point_to_int_tuple(vertices[i]), 2, color, -1)
@@ -52,7 +54,7 @@ def draw(img, vertices, color, polygon, name):
   
   # centroid = point_to_int_tuple(polygon.centroid)
   # cv2.circle(img, centroid, 1, color, -1)
-  cv2.putText(img, name, point_to_int_tuple(vertices[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+  cv2.putText(img, component.name, point_to_int_tuple(vertices[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
 
 def rand_color():
   r = random.randint(0, 255)
@@ -88,7 +90,6 @@ def main(argv):
       area = polygon_area(vertices)
       vertex_count = len(vertices)
       # print "area=%d, vertices=%d" % (area, len(vertices))
-      will_draw = False
       if (vertex_count == 1):
         pass
       elif (vertex_count == 2):
@@ -98,10 +99,7 @@ def main(argv):
       elif (vertex_count == 4):
         polygon = create_polygon(vertices)
         if polygon.area > 100:
-          will_draw = True
-        # print polygon.centroid
-          components.append(Component(polygon, "Square#"+ str(b)))
-          
+          components.append(Component(vertices, polygon, "Square#" + str(b)))          
           # print "a=%d" % (component.area)
         pass
       elif (vertex_count == 5):
@@ -111,16 +109,17 @@ def main(argv):
       elif (vertex_count == 7):
         pass
       elif (vertex_count == 8):
-        # will_draw = True
         pass
       else:
         pass
-      
-      if (will_draw):
-        draw(newimg, vertices, rand_color(), polygon, "SQUARE " + str(b))
-  root_component = Component(Polygon([(0, 0), (0, img.shape[0]), (img.shape[1], img.shape[0]), (img.shape[1], 0)]), "Main")
+
+  for c in components:
+    draw(newimg, c, rand_color())
+
+  root_component = Component([], Polygon([(0, 0), (0, img.shape[0]), (img.shape[1], img.shape[0]), (img.shape[1], 0)]), "Main")
   components.append(root_component)
   components.sort()
+  
   print [c for c in components]
   for i in range(len(components)):
     for j in range(i + 1, len(components)):

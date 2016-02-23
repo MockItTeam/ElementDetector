@@ -1,5 +1,6 @@
 class Component:
-  def __init__(self, polygon, name):
+  def __init__(self, vertices, polygon, name):
+    self.vertices = vertices
     self.polygon = polygon
     self.name = name
     self.children = []
