@@ -139,6 +139,7 @@ def main(argv):
             if (create_line_string([point, v]).length < average-4 or create_line_string([point, v]).length > average+4 ):
               status = "false"
           if (status == "true"):
+            polygon = create_polygon(vertices)
             components.append(Component(vertices, polygon, "Circle"+str(polygon.area) ))
         pass
         # for v in vertices:
