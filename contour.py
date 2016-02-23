@@ -26,6 +26,12 @@ def create_polygon(vertices):
     tuple_points.append((v.x, v.y))
   return Polygon(tuple_points)
 
+def create_line_string(vertices):
+  tuple_points = []
+  for v in vertices:
+    tuple_points.append((v.x, v.y))
+  return LineString(tuple_points)
+
 def get_vertices(approx):
   vertices = []
   for i in range(len(approx)):
@@ -53,8 +59,8 @@ def rand_color():
   return r, g, b
 
 def main(argv):
-  img = cv2.imread('/Users/mapfap/Desktop/test.jpg')
-  img = cv2.resize(img, (int(img.shape[1] * 1), int(img.shape[0] * 1)))
+  img = cv2.imread('/Users/ixistic/Desktop/test.jpg')
+  img = cv2.resize(img, (int(img.shape[1] * 2), int(img.shape[0] * 2)))
   gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
   kernel = np.ones((2, 2), np.uint8)
@@ -111,7 +117,32 @@ def main(argv):
       elif (vertex_count == 8):
         pass
       else:
+        point_x_max = max(vertices, key=lambda v: v.x)
+        point_x_min = min(vertices, key=lambda v: v.x)
+        point_y_max = max(vertices, key=lambda v: v.y)
+        point_y_min = min(vertices, key=lambda v: v.y)
+        # print [c.x for c in vertices]
+        # vertices[0].x
+        a = LineString([point_x_max, point_x_min])
+        b = LineString([point_y_max, point_y_min])
+        
+        if(a.intersects(b)):
+          point = a.intersection(b)
+        
+        length_all = []
+        if(point.geom_type == "Point"):
+          for v in vertices:
+            length_all.append(create_line_string([point, v]).length)
+          average = sum(length_all) / len(length_all)
+          status = "true"
+          for v in vertices:
+            if (create_line_string([point, v]).length < average-4 or create_line_string([point, v]).length > average+4 ):
+              status = "false"
+          if (status == "true"):
+            components.append(Component(vertices, polygon, "Circle"+str(polygon.area) ))
         pass
+        # for v in vertices:
+        #   print v.x
 
   for c in components:
     draw(newimg, c, rand_color())
