@@ -3,6 +3,7 @@ import sys
 import numpy as np
 import cv2
 import random
+import math
 
 def PolygonArea(corners):
   n = len(corners) # of corners
@@ -14,30 +15,51 @@ def PolygonArea(corners):
   area = abs(area) / 2.0
   return area
 
+def dist(x1,x2,y1,y2):
+  return math.hypot(x2 - x1, y2 - y1)
+
 def create_graph(vertex, color):
-  if len(vertex) == 4 or True:
+  if len(vertex) >= 7:
     corners = []
 
     for g in range(0, len(vertex)-1):
       corners.append( (vertex[g][0][0], vertex[g][0][1]) )
 
+    distance = []
+    num_sum = 0
+    for x in range(0, len(corners)-1):
+      distance.append(dist(corners[x][0],corners[x+1][0],corners[x][1],corners[x+1][1]))
+      num_sum += dist(corners[x][0],corners[x+1][0],corners[x][1],corners[x+1][1])
+      print dist(corners[x][0],corners[x+1][0],corners[x][1],corners[x+1][1])
+
+    # distance.append(dist(corners[0][0],corners[len(corners)-1][0],corners[0][1],corners[len(corners)-1][1]))
+    # print dist(corners[0][0],corners[len(corners)-1][0],corners[0][1],corners[len(corners)-1][1])
+    if (len(corners)-1 != 0):
+      average = num_sum/(len(corners)-1)
+    print "ice"
+
     area = PolygonArea(corners)
     if (area > 100):
+      status = "yes"
+      for c in range(0, len(distance)-1):
+        if(int(distance[c]) < int(average)-4 | int(distance[c]) > int(average)+4):
+          status = "no"
 
-
-      for g in range(0, len(vertex)-1):
-        # for y in range(0, len(vertex[0][0])-1):
-        # [0][0] is X
-        # [0][1] is Y
-        corners.append( (vertex[g][0][0], vertex[g][0][1]) );
-        cv2.circle(newimg, (vertex[g][0][0], vertex[g][0][1]), 2, color, -1)
-        cv2.line(newimg, (vertex[g][0][0], vertex[g][0][1]), (vertex[g+1][0][0], vertex[g+1][0][1]), color, 1)
-      cv2.line(newimg, (vertex[len(vertex)-1][0][0], vertex[len(vertex)-1][0][1]), (vertex[0][0][0], vertex[0][0][1]), color, 1)
+      if(status == "yes"):    
+        for g in range(0, len(vertex)-1):
+          # for y in range(0, len(vertex[0][0])-1):
+          # [0][0] is X
+          # [0][1] is Y
+          dista = dist(corners[g][0],corners[g+1][0],corners[g][1],corners[g+1][1])
+          corners.append( (vertex[g][0][0], vertex[g][0][1]) );
+          cv2.circle(newimg, (vertex[g][0][0], vertex[g][0][1]), 2, color, -1)
+          cv2.line(newimg, (vertex[g][0][0], vertex[g][0][1]), (vertex[g+1][0][0], vertex[g+1][0][1]), color, 1)
+        cv2.line(newimg, (vertex[len(vertex)-1][0][0], vertex[len(vertex)-1][0][1]), (vertex[0][0][0], vertex[0][0][1]), color, 1)
   # print vertex
   # print len(vertex)
 
 
-img = cv2.imread('/Users/mapfap/Desktop/test.jpg')
+img = cv2.imread('/Users/ixistic/Desktop/test.jpg')
 img = cv2.resize(img, (800, 400))
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
