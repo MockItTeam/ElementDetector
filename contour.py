@@ -2,7 +2,7 @@ import sys
 import numpy as np
 import cv2
 import random
-from shapely.geometry import Point, Polygon
+from shapely.geometry import Point, LineString, Polygon
 from component import Component
 
 def assign_depth(root):
@@ -25,16 +25,6 @@ def create_polygon(vertices):
   for v in vertices:
     tuple_points.append((v.x, v.y))
   return Polygon(tuple_points)
-
-def polygon_area(vertices):
-  n = len(vertices)
-  area = 0.0
-  for i in range(n):
-    j = (i + 1) % n
-    area += vertices[i].x * vertices[j].y
-    area -= vertices[j].x * vertices[i].y
-  area = abs(area) / 2.0
-  return area
 
 def get_vertices(approx):
   vertices = []
@@ -82,27 +72,37 @@ def main(argv):
   # contours,hierarchy = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
   components = []
+  root_component = Component([], Polygon([(0, 0), (0, img.shape[0]), (img.shape[1], img.shape[0]), (img.shape[1], 0)]), "Main")
+  root_area = root_component.polygon.area
+  size_threshold = (0.1 / 100 * root_area)
+  print "Size Threshold: " + str(size_threshold)
 
   for b,cnt in enumerate(contours):
     if hierarchy[0,b,3] == -1:
       approx = cv2.approxPolyDP(cnt, 0.015 * cv2.arcLength(cnt, True), True)
       vertices = get_vertices(approx)
-      area = polygon_area(vertices)
       vertex_count = len(vertices)
-      # print "area=%d, vertices=%d" % (area, len(vertices))
+
+
       if (vertex_count == 1):
-        pass
-      elif (vertex_count == 2):
-        pass
+        # Ignore single dot
+        continue
+      if (vertex_count == 2):
+        if (LineString([vertices[0], vertices[1]]).length > 100):
+          draw(newimg, Component(vertices, Polygon(), ""), rand_color())
+        pass      
       elif (vertex_count == 3):
         pass
       elif (vertex_count == 4):
         polygon = create_polygon(vertices)
-        if polygon.area > 100:
-          components.append(Component(vertices, polygon, "Square#" + str(b)))          
-          # print "a=%d" % (component.area)
-        pass
+        if polygon.area > size_threshold:
+          components.append(Component(vertices, polygon, "Square#" + str(b)))
+          pass
       elif (vertex_count == 5):
+        polygon = create_polygon(vertices)
+        if polygon.area > size_threshold:
+          components.append(Component(vertices, polygon, "Pentagon#" + str(b)))
+          pass
         pass
       elif (vertex_count == 6):
         pass
@@ -116,7 +116,6 @@ def main(argv):
   for c in components:
     draw(newimg, c, rand_color())
 
-  root_component = Component([], Polygon([(0, 0), (0, img.shape[0]), (img.shape[1], img.shape[0]), (img.shape[1], 0)]), "Main")
   components.append(root_component)
   components.sort()
   
