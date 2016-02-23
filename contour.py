@@ -2,7 +2,29 @@ import sys
 import numpy as np
 import cv2
 import random
-from point import Point
+from shapely.geometry import Point, Polygon
+from component import Component
+
+def assign_depth(root):
+  for c in root.children:
+    c.depth = root.depth + 1
+    assign_depth(c) 
+
+def print_tree(root, space = ""):
+  print space + "- " + root.name + "_" +  str(root.depth)
+  new_space = space + "-"
+  for c in root.children:
+    print_tree(c, new_space)
+
+
+def point_to_int_tuple(point):
+  return int(point.x), int(point.y)
+
+def create_polygon(vertices):
+  tuple_points = []
+  for v in vertices:
+    tuple_points.append((v.x, v.y))
+  return Polygon(tuple_points)
 
 def polygon_area(vertices):
   n = len(vertices)
@@ -20,13 +42,17 @@ def get_vertices(approx):
     vertices.append(Point(approx[i][0][0], approx[i][0][1]))
   return vertices
 
-def draw(img, vertices, color):
+def draw(img, vertices, color, polygon, name):
   vertex_count = len(vertices)
   for i in range(vertex_count - 1):
-    cv2.circle(img, vertices[i].tuple(), 2, color, -1)
-    cv2.putText(img, str(i), vertices[i].tuple(), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
-    cv2.line(img, vertices[i].tuple(), vertices[i + 1].tuple(), color, 1)
-  cv2.line(img, vertices[vertex_count - 1].tuple(), vertices[0].tuple(), color, 1) # Draw line from last vertex to the first one.
+    cv2.circle(img, point_to_int_tuple(vertices[i]), 2, color, -1)
+    # cv2.putText(img, str(i), vertices[i].xy, cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+    cv2.line(img, point_to_int_tuple(vertices[i]), point_to_int_tuple(vertices[i + 1]), color, 1)
+  cv2.line(img, point_to_int_tuple(vertices[vertex_count - 1]), point_to_int_tuple(vertices[0]), color, 1) # Draw line from last vertex to the first one.
+  
+  # centroid = point_to_int_tuple(polygon.centroid)
+  # cv2.circle(img, centroid, 1, color, -1)
+  cv2.putText(img, name, point_to_int_tuple(vertices[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
 
 def rand_color():
   r = random.randint(0, 255)
@@ -53,6 +79,8 @@ def main(argv):
   contours,hierarchy = cv2.findContours(edges, cv2.cv.CV_RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
   # contours,hierarchy = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
+  components = []
+
   for b,cnt in enumerate(contours):
     if hierarchy[0,b,3] == -1:
       approx = cv2.approxPolyDP(cnt, 0.015 * cv2.arcLength(cnt, True), True)
@@ -68,8 +96,13 @@ def main(argv):
       elif (vertex_count == 3):
         pass
       elif (vertex_count == 4):
-        # if area > 100:
-        will_draw = True
+        polygon = create_polygon(vertices)
+        if polygon.area > 100:
+          will_draw = True
+        # print polygon.centroid
+          components.append(Component(polygon, "Square#"+ str(b)))
+          
+          # print "a=%d" % (component.area)
         pass
       elif (vertex_count == 5):
         pass
@@ -82,9 +115,25 @@ def main(argv):
         pass
       else:
         pass
-        
+      
       if (will_draw):
-        draw(newimg, vertices, rand_color())
+        draw(newimg, vertices, rand_color(), polygon, "SQUARE " + str(b))
+  root_component = Component(Polygon([(0, 0), (0, img.shape[0]), (img.shape[1], img.shape[0]), (img.shape[1], 0)]), "Main")
+  components.append(root_component)
+  components.sort()
+  print [c for c in components]
+  for i in range(len(components)):
+    for j in range(i + 1, len(components)):
+      # print "%d.%d" % (i, j)
+      if components[i].polygon.within(components[j].polygon):
+        components[j].add_child(components[i])
+        print "%s is in %s" % (components[i].name, components[j].name)
+        break
+      # else:
+        # print "%s isn't in %s" % (components[i].name, components[j].name)
+
+  assign_depth(root_component)
+  print_tree(root_component)
 
   cv2.imshow('Show', newimg)
   cv2.waitKey(0)
