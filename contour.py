@@ -140,7 +140,8 @@ def main(argv):
               status = "false"
           if (status == "true"):
             polygon = create_polygon(vertices)
-            components.append(Component(vertices, polygon, "Circle"+str(polygon.area) ))
+            if (polygon.area >= 500):
+              components.append(Component(vertices, polygon, "Circle"+str(polygon.area) ))
         pass
         # for v in vertices:
         #   print v.x
