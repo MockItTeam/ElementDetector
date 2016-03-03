@@ -53,7 +53,7 @@ def rand_color():
   return r, g, b
 
 def main(argv):
-  img = cv2.imread('/Users/mapfap/Desktop/test8.jpg')
+  img = cv2.imread('img/test8.jpg')
   
   prefer_height = 800
 
