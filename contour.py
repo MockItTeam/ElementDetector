@@ -53,23 +53,57 @@ def rand_color():
   return r, g, b
 
 def main(argv):
-  img = cv2.imread('/Users/mapfap/Desktop/test.jpg')
-  img = cv2.resize(img, (int(img.shape[1] * 1), int(img.shape[0] * 1)))
-  gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+  img = cv2.imread('/Users/mapfap/Desktop/test8.jpg')
+  
+  prefer_height = 800
 
-  kernel = np.ones((2, 2), np.uint8)
-  erosion = cv2.erode(gray, kernel, iterations = 1)
-  # erosion = gray # Skip erosion
+  img = cv2.resize(img, (int(1.0 * img.shape[1] * prefer_height / img.shape[0] ), prefer_height))
+  # img = cv2.resize(img, (int(img.shape[1] * 1.3), int(img.shape[0] * 1.3)))
+  
+  gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+  gray = cv2.GaussianBlur(gray, (7, 7), 0)
+
+  # cv2.imshow('Show', gray)
+  # cv2.waitKey(0)
+  # cv2.destroyAllWindows()
+
+  gray = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 5)
+  # gray = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 3)
+  #                            src   result_intensity   method             type            block area weight_sum                   
+
+  # gray = cv2.GaussianBlur(gray, (7, 7), 0)
+
+
+  # retval, gray = cv2.threshold(gray, 128, 255, cv2.THRESH_OTSU)
+
+  # retval, gray = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY)
+
+  cv2.imshow('Show', gray)
+  cv2.waitKey(0)
+  cv2.destroyAllWindows()
+
+
+  # kernel = np.ones((2, 2), np.uint8)
+  # erosion = cv2.erode(gray, kernel, iterations = 1)
+  erosion = gray # Skip erosion
 
   height, width = gray.shape
   newimg = np.zeros((height, width, 3), np.uint8)
 
   # Canny edge detector
-  thresh = 180
-  edges = cv2.Canny(erosion, thresh, thresh * 2)
+  # thresh = 128
+  edges = cv2.Canny(erosion, 128, 200)
+  #                           min max
 
+  # cv2.imshow('Show', edges)
+  # cv2.waitKey(0)
+  # cv2.destroyAllWindows()
+
+  # contours,hierarchy = cv2.findContours(edges, cv2.cv.CV_RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
   contours,hierarchy = cv2.findContours(edges, cv2.cv.CV_RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-  # contours,hierarchy = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+  # contours, hierarchy = cv2.findContours(edges, cv2.cv.CV_RETR_LIST, cv2.cv.CV_CHAIN_APPROX_TC89_L1)
+  # contours, hierarchy = cv2.findContours(edges, cv2.cv.CV_RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
 
   components = []
   root_component = Component([], Polygon([(0, 0), (0, img.shape[0]), (img.shape[1], img.shape[0]), (img.shape[1], 0)]), "Main")
@@ -77,10 +111,19 @@ def main(argv):
   size_threshold = (0.1 / 100 * root_area)
   print "Size Threshold: " + str(size_threshold)
 
-  for b,cnt in enumerate(contours):
-    if hierarchy[0,b,3] == -1:
-      approx = cv2.approxPolyDP(cnt, 0.015 * cv2.arcLength(cnt, True), True)
+  for b, cnt in enumerate(contours):
+    if False or hierarchy[0,b,3] == -1:
+      print b
+      print ":::\n"
+      print cnt 
+      print "~~~\n"
+      approx = cv2.approxPolyDP(cnt, 0.01 * cv2.arcLength(cnt, True), True)
+      
+
       vertices = get_vertices(approx)
+      print [str(v.x) + "," + str(v.y) for v in vertices]
+
+      print "!!!!\n"
       vertex_count = len(vertices)
 
 
@@ -88,21 +131,21 @@ def main(argv):
         # Ignore single dot
         continue
       if (vertex_count == 2):
-        if (LineString([vertices[0], vertices[1]]).length > 100):
-          draw(newimg, Component(vertices, Polygon(), ""), rand_color())
-        pass      
+        # if (LineString([vertices[0], vertices[1]]).length > 100):
+          # draw(newimg, Component(vertices, Polygon(), ""), rand_color())
+        continue      
       elif (vertex_count == 3):
-        pass
+        continue
       elif (vertex_count == 4):
-        polygon = create_polygon(vertices)
-        if polygon.area > size_threshold:
-          components.append(Component(vertices, polygon, "Square#" + str(b)))
-          pass
+        # if polygon.area > size_threshold:
+        # polygon = create_polygon(vertices)
+        # components.append(Component(vertices, polygon, "Square#" + str(b)))
+        pass
       elif (vertex_count == 5):
-        polygon = create_polygon(vertices)
-        if polygon.area > size_threshold:
-          components.append(Component(vertices, polygon, "Pentagon#" + str(b)))
-          pass
+        # polygon = create_polygon(vertices)
+        # if polygon.area > size_threshold:
+          # components.append(Component(vertices, polygon, "Pentagon#" + str(b)))
+          # pass
         pass
       elif (vertex_count == 6):
         pass
@@ -112,6 +155,9 @@ def main(argv):
         pass
       else:
         pass
+
+      polygon = create_polygon(vertices)
+      components.append(Component(vertices, polygon, ""))
 
   for c in components:
     draw(newimg, c, rand_color())
