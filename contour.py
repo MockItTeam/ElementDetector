@@ -39,21 +39,17 @@ class sliderdemo(QtGui.QWidget):
       layout.addWidget(pic_label, 1, i)
       self.pic_labels.append(pic_label)
 
-    self.pic2 = QtGui.QLabel()
-    self.pic2.setGeometry(10, 10, 800, 800)
-    layout.addWidget(self.pic2)
-
     self.sl.valueChanged.connect(self.valuechange)
     self.setLayout(layout)
     self.setWindowTitle("SpinBox demo")
 
+    self.process_image(0)
     self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
 
   def valuechange(self):
     val = self.sl.value()
     self.l1.setText(str(val))
     cv2.destroyAllWindows()
-    self.process_image(val)
 
   def show_image(self, index, img):
     tmp = "out/ " + str(index) + ".jpg"
@@ -160,6 +156,7 @@ class sliderdemo(QtGui.QWidget):
             # draw(newimg, Component(vertices, Polygon(), ""), rand_color())
           continue      
         elif (vertex_count == 3):
+          print 
           continue
         elif (vertex_count == 4):
           # if polygon.area > size_threshold:
