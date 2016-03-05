@@ -4,18 +4,22 @@ import util
 SQUARE_THRESHOLD = 0.2
 
 class Description:
+  # Primary
   Unknown = "Unknown"
   Quadrilateral = "Quadrilateral"
+  Triangle = "Triangle"
+
+  # Secondary
+  Square = "Square"
   Rectangle = "Rectangle"
   HorizontalRectangle = "HorizontalRectangle"
   VerticalRectangle = "VerticalRectangle"
-  Square = "Square"
 
-  Triangle = "Triangle"
-
+  # Tertiary
   TextField = "TextField"
   TextArea = "TextArea"
   Panel = "Panel"
+  VideoPlayer = "VideoPlayer"
 
 class Component:
   def __init__(self, vertices, polygon, name):
@@ -43,8 +47,9 @@ class Component:
   #   return self.polygon.intersects
 
   def is_a(self, description):
+    # TODO: subclass equivalent
     return description == self.description
-    
+
   def __lt__(self, other):
     return self.polygon.area < other.polygon.area
 

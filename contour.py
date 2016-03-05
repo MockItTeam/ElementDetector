@@ -73,14 +73,33 @@ class sliderdemo(QtGui.QWidget):
     for i in range(len(root.children)):
       self.destroy_all_children(root.children[i])
       root.children[i] = None
+    root.children = []
 
   def destroy_all_children_of_triangle(self, root):
     if root.is_a(Description.Triangle):
       self.destroy_all_children(root)
-      root.children = []
     for c in root.children:
       self.destroy_all_children_of_triangle(c)
 
+  def detect_video_player(self, root):
+
+    if len(root.children) == 1 and root.is_a(Description.HorizontalRectangle) and root.children[0].is_a(Description.Triangle):
+      root.description = Description.VideoPlayer
+      root.name = root.description
+      self.destroy_all_children(root)
+
+    for c in root.children:
+      self.detect_video_player(c)
+
+  def detect_panel(self, root):
+
+    if len(root.children) >= 1 and root.is_a(Description.HorizontalRectangle):
+      root.description = Description.Panel
+      root.name = root.description
+
+    for c in root.children:
+      self.detect_panel(c)
+      
   def draw(self, img, component, color):
     vertices = component.vertices
 
@@ -92,7 +111,7 @@ class sliderdemo(QtGui.QWidget):
 
     # centroid = util.point_to_int_tuple(polygon.centroid)
     # cv2.circle(img, centroid, 1, color, -1)
-    cv2.putText(img, component.name, util.point_to_int_tuple(vertices[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+    cv2.putText(img, component.description, util.point_to_int_tuple(vertices[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
   def process_image(self, val):
     img = cv2.imread('img/test8.jpg')
@@ -239,6 +258,10 @@ class sliderdemo(QtGui.QWidget):
         # destroy_all(c.children)
 
     self.destroy_all_children_of_triangle(root_component)
+
+    self.detect_video_player(root_component)
+    self.detect_panel(root_component)
+
 
     # TODO: Cannot do this anynore!! 
     for i in range(len(components)):
