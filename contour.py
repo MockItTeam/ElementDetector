@@ -218,6 +218,9 @@ class ImgProc(QtGui.QWidget):
         vertices = util.reduce_vertex_by_angle(vertices, 160)
         vertices = util.reduce_vertex_by_length(vertices, 0.2)
         vertices = util.reduce_vertex_by_angle(vertices, 145)
+        vertices = util.reduce_vertex_by_length(vertices, 0.25)
+        vertices = util.reduce_vertex_by_angle(vertices, 130)
+
         vertex_count = len(vertices)
 
         if (vertex_count == 0):
@@ -234,15 +237,15 @@ class ImgProc(QtGui.QWidget):
 
         if (vertex_count == 3):
           polygon = util.create_polygon(vertices)
-          if not polygon.is_valid:
-            continue
+          # if not polygon.is_valid:
+          #   continue
           if polygon.area > size_threshold:
             components.append(TriangleComponent(vertices, polygon, "Tri#" + str(b)))
           continue
         elif (vertex_count == 4):
           polygon = util.create_polygon(vertices)
-          if not polygon.is_valid:
-            continue
+          # if not polygon.is_valid:
+          #   continue
           if polygon.area > size_threshold:
             c = QuadrilateralComponent(vertices, polygon, "Quad#" + str(b))
             # c.name = c.geometry_type + str(c.ratio)
