@@ -4,7 +4,7 @@ import cv2
 import util
 
 from shapely.geometry import Point, LineString, Polygon
-from component import Component
+from component import Component, QuadrilateralComponent, Description
 
 from PyQt4 import QtCore, QtGui
 
@@ -20,7 +20,7 @@ class sliderdemo(QtGui.QWidget):
     # layout = QtGui.QHBoxLayout()
     # layout_a.addWidget(layout)
 
-    self.l1 = QtGui.QLabel("Hello")
+    self.l1 = QtGui.QLabel("Threshold")
     self.l1.setAlignment(QtCore.Qt.AlignCenter)
     layout.addWidget(self.l1)
 
@@ -43,7 +43,7 @@ class sliderdemo(QtGui.QWidget):
 
     self.sl.valueChanged.connect(self.valuechange)
     self.setLayout(layout)
-    self.setWindowTitle("SpinBox demo")
+    self.setWindowTitle("Debug IMG")
 
     self.process_image(0)
     self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
@@ -75,7 +75,7 @@ class sliderdemo(QtGui.QWidget):
 
     # centroid = util.point_to_int_tuple(polygon.centroid)
     # cv2.circle(img, centroid, 1, color, -1)
-    cv2.putText(img, component.name, util.point_to_int_tuple(vertices[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+    cv2.putText(img, component.name, util.point_to_int_tuple(vertices[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
   def process_image(self, val):
     img = cv2.imread('img/test8.jpg')
@@ -155,8 +155,10 @@ class sliderdemo(QtGui.QWidget):
         vertex_count = len(vertices)
 
         # Delete vertex that likely to be straight line
+        vertices = util.reduce_vertex_by_length(vertices, 0.1)
+        vertices = util.reduce_vertex_by_angle(vertices, 160)
         vertices = util.reduce_vertex_by_length(vertices, 0.2)
-        vertices = util.reduce_vertex_by_angle(vertices, 140)
+        vertices = util.reduce_vertex_by_angle(vertices, 145)
         vertex_count = len(vertices)
 
         if (vertex_count == 0):
@@ -171,12 +173,20 @@ class sliderdemo(QtGui.QWidget):
         elif (vertex_count == 3):
           polygon = util.create_polygon(vertices)
           if polygon.area > size_threshold:
-            components.append(Component(vertices, polygon, "Tri"))
+            components.append(Component(vertices, polygon, "Triangle"))
+          continue
         elif (vertex_count == 4):
           polygon = util.create_polygon(vertices)
           if polygon.area > size_threshold:
-            components.append(Component(vertices, polygon, "Rec"))
-          pass
+            c = QuadrilateralComponent(vertices, polygon, "Quad")
+            # c.name = c.geometry_type + str(c.ratio)
+            if (c.ratio > 4):
+              c.description = Description.TextField
+            else:
+              c.description = Description.TextArea
+            c.name = c.description
+            components.append(c)
+          continue
         elif (vertex_count == 5):
           pass
         elif (vertex_count == 6):
@@ -189,24 +199,31 @@ class sliderdemo(QtGui.QWidget):
           pass
 
         # polygon = util.create_polygon(vertices)
-        # components.append(Component(vertices, polygon, ""))
+        # if polygon.area > size_threshold:
+          # components.append(Component(vertices, polygon, "X"))
+
+    components = util.remove_resembling_component(components, 0.5)
 
     for c in components:
-
       self.draw(newimg, c, util.rand_color())
-    # components.append(root_component)
-    # components.sort()
+
+    components.append(root_component)
+    components.sort()
     
     # # print [c for c in components]
-    # for i in range(len(components)):
-    #   for j in range(i + 1, len(components)):
-    #     if components[i].polygon.within(components[j].polygon):
-    #       components[j].add_child(components[i])
-    #       # print "%s is in %s" % (components[i].name, components[j].name)
-    #       break
+    for i in range(len(components)):
+      for j in range(i + 1, len(components)):
+        if components[i].polygon.within(components[j].polygon):
+          components[i].parent = components[j]
+          components[j].add_child(components[i])
+          # print "%s is in %s" % (components[i].name, components[j].name)
+          break
 
-    # util.assign_depth(root_component)
-    # util.print_tree(root_component)
+    util.assign_depth(root_component)
+    util.print_tree(root_component)
+
+    # for i in range(len(components)):
+    #   if len(components[i].vertices) == 4:
 
     # cv2.imshow('Show', newimg)
     self.show_image(2, newimg, 900)

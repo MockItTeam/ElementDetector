@@ -37,7 +37,7 @@ def zhangSuen(image):
     while changing1 or changing2:   #  iterates until no further changes occur in the image
         # Step 1
         changing1 = []
-        wsws, rows, columns = Image_Thinned.shape               # x for rows, y for columns
+        rows, columns = Image_Thinned.shape               # x for rows, y for columns
         for x in range(1, rows - 1):                     # No. of  rows
             for y in range(1, columns - 1):            # No. of columns
                 P2,P3,P4,P5,P6,P7,P8,P9 = n = neighbours(x, y, Image_Thinned)
