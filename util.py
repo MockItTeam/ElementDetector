@@ -138,6 +138,7 @@ def remove_resembling_component(components, threshold):
   for i in range(len(components)):
     for j in range(i+1, len(components)):
       if (is_resembling_subset(components[i].polygon, components[j].polygon, threshold)):
+        print "Remove resembling component: " + components[i].name 
         components.pop(i)
         return remove_resembling_component(components, threshold)
   return components
