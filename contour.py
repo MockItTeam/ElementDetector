@@ -4,7 +4,7 @@ import cv2
 import util
 
 from shapely.geometry import Point, LineString, Polygon
-from component import Component, QuadrilateralComponent, Description
+from component import *
 
 from PyQt4 import QtCore, QtGui
 
@@ -64,6 +64,23 @@ class sliderdemo(QtGui.QWidget):
     pixmap = pixmap.scaledToHeight(height)
     self.pic_labels[index].setPixmap(pixmap)
 
+  def draw_tree(self, root):
+    self.draw(self.newimg, root, util.rand_color())
+    for c in root.children:
+      self.draw_tree(c)
+
+  def destroy_all_children(self, root):
+    for i in range(len(root.children)):
+      self.destroy_all_children(root.children[i])
+      root.children[i] = None
+
+  def destroy_all_children_of_triangle(self, root):
+    if root.is_a(Description.Triangle):
+      self.destroy_all_children(root)
+      root.children = []
+    for c in root.children:
+      self.destroy_all_children_of_triangle(c)
+
   def draw(self, img, component, color):
     vertices = component.vertices
 
@@ -100,7 +117,7 @@ class sliderdemo(QtGui.QWidget):
     # erosion = img # Skip erosion
 
     height, width = img.shape
-    newimg = np.zeros((height, width, 3), np.uint8)
+    self.newimg = np.zeros((height, width, 3), np.uint8)
 
     
     img = cv2.Canny(img, 128, 200) # min max
@@ -142,7 +159,7 @@ class sliderdemo(QtGui.QWidget):
     contours, hierarchy = cv2.findContours(img, cv2.cv.CV_RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
     components = []
-    root_component = Component([], Polygon([(0, 0), (0, img.shape[0]), (img.shape[1], img.shape[0]), (img.shape[1], 0)]), "Main")
+    root_component = Component([Point(0, 0), Point(0, img.shape[0]), Point(img.shape[1], img.shape[0]), Point(img.shape[1], 0)], Polygon([(0, 0), (0, img.shape[0]), (img.shape[1], img.shape[0]), (img.shape[1], 0)]), "Root")
     root_area = root_component.polygon.area
     size_threshold = (0.05 / 100 * root_area)
     # print "Size Threshold: " + str(size_threshold)
@@ -168,23 +185,18 @@ class sliderdemo(QtGui.QWidget):
           continue
         if (vertex_count == 2):
           # if (LineString([vertices[0], vertices[1]]).length > 100):
-            # draw(newimg, Component(vertices, Polygon(), ""), rand_color())
+            # draw(self.newimg, Component(vertices, Polygon(), ""), rand_color())
           continue      
         elif (vertex_count == 3):
           polygon = util.create_polygon(vertices)
           if polygon.area > size_threshold:
-            components.append(Component(vertices, polygon, "Triangle"))
+            components.append(TriangleComponent(vertices, polygon, "Triangle"))
           continue
         elif (vertex_count == 4):
           polygon = util.create_polygon(vertices)
           if polygon.area > size_threshold:
             c = QuadrilateralComponent(vertices, polygon, "Quad")
             # c.name = c.geometry_type + str(c.ratio)
-            if (c.ratio > 4):
-              c.description = Description.TextField
-            else:
-              c.description = Description.TextArea
-            c.name = c.description
             components.append(c)
           continue
         elif (vertex_count == 5):
@@ -204,12 +216,12 @@ class sliderdemo(QtGui.QWidget):
 
     components = util.remove_resembling_component(components, 0.5)
 
-    for c in components:
-      self.draw(newimg, c, util.rand_color())
-
     components.append(root_component)
     components.sort()
     
+
+    ##### INITIATE TREE OPERATION !!
+
     # # print [c for c in components]
     for i in range(len(components)):
       for j in range(i + 1, len(components)):
@@ -220,13 +232,35 @@ class sliderdemo(QtGui.QWidget):
           break
 
     util.assign_depth(root_component)
-    util.print_tree(root_component)
 
     # for i in range(len(components)):
-    #   if len(components[i].vertices) == 4:
+      # c = components[i]
+      # if c.is_a(Description.Triangle):
+        # destroy_all(c.children)
 
-    # cv2.imshow('Show', newimg)
-    self.show_image(2, newimg, 900)
+    self.destroy_all_children_of_triangle(root_component)
+
+    # TODO: Cannot do this anynore!! 
+    for i in range(len(components)):
+      c = components[i]
+      if c.is_leaf:
+        # describe_component(components[i])
+        if c.is_a(Description.HorizontalRectangle):
+          if (c.ratio > 4):
+            c.description = Description.TextField
+          else:
+            c.description = Description.TextArea
+          c.name = c.description
+          # print c.name
+
+
+
+    # for i in range(len(components)):
+      # if components[i] is not None:
+    self.draw_tree(root_component)
+    # cv2.imshow('Show', self.newimg)
+    util.print_tree(root_component)
+    self.show_image(2, self.newimg, 900)
 
 if __name__ == "__main__":
   app = QtGui.QApplication(sys.argv)

@@ -11,6 +11,8 @@ class Description:
   VerticalRectangle = "VerticalRectangle"
   Square = "Square"
 
+  Triangle = "Triangle"
+
   TextField = "TextField"
   TextArea = "TextArea"
   Panel = "Panel"
@@ -40,6 +42,9 @@ class Component:
   # def intersects(self):
   #   return self.polygon.intersects
 
+  def is_a(self, description):
+    return description == self.description
+    
   def __lt__(self, other):
     return self.polygon.area < other.polygon.area
 
@@ -52,17 +57,31 @@ class Component:
   def __unicode__(self):
     return u"?"
 
+
+class TriangleComponent(Component):
+  def __init__(self, vertices, polygon, name):
+    Component.__init__(self, vertices, polygon, name);
+
+    if (len(vertices) != 3):
+      raise Exception('TriangleComponent', 'Need exactly 3 vertices')
+    self.describe()
+
+  def describe(self):
+    self.description = Description.Triangle
+
 class QuadrilateralComponent(Component):
   def __init__(self, vertices, polygon, name):
     Component.__init__(self, vertices, polygon, name);
 
     if (len(vertices) != 4):
-      raise Exception('RectangleComponent', 'Need exactly 4 vertices')
+      raise Exception('QuadrilateralComponent', 'Need exactly 4 vertices')
     # self.describe = Geometry.Quadrilateral
     self.ratio = 0   # X-Parallel / Y-Parallel
     self.describe()
 
   def describe(self):
+    self.description = Description.Quadrilateral
+
     side_1_axis = util.find_parallel_axis(self.vertices[0], self.vertices[1])
     side_2_axis = util.find_parallel_axis(self.vertices[1], self.vertices[2])
     side_3_axis = util.find_parallel_axis(self.vertices[2], self.vertices[3])
@@ -90,7 +109,4 @@ class QuadrilateralComponent(Component):
           self.description = Description.HorizontalRectangle
         else:
           self.description = Description.VerticalRectangle
-      else:   
-        self.description = Description.Quadrilateral
-    else:
-      self.description = Description.Quadrilateral
+      
