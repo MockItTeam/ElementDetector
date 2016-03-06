@@ -1,5 +1,7 @@
 import sys
 from PyQt4 import QtCore, QtGui
+import cv2
+import util
 
 class ImageDebuggerGUI(QtGui.QWidget):
   def __init__(self, parent = None):
@@ -59,10 +61,10 @@ class ImageDebuggerGUI(QtGui.QWidget):
     pixmap = pixmap.scaledToHeight(height)
     self.pic_labels[index].setPixmap(pixmap)
 
-  def draw_tree(self, root):
-    self.draw(self.newimg, root, util.rand_color())
+  def draw_tree(self, img, root):
+    self.draw(img, root, util.rand_color())
     for c in root.children:
-      self.draw_tree(c)
+      self.draw_tree(img, c)
 
   def draw(self, img, component, color):
     vertices = component.vertices
