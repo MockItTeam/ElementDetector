@@ -9,8 +9,9 @@ from component import *
 
 class ElementDetector:
 
-  def __init__(self, gui):
-    self.gui = gui
+  def __init__(self):
+    self.ocr = None
+    self.gui = None
 
   def destroy_all_children(self, root):
     for i in range(len(root.children)):
@@ -70,7 +71,8 @@ class ElementDetector:
             
     img = cv2.bitwise_not(img)
 
-    self.gui.show_image(0, img, 900)
+    if self.gui:
+      self.gui.show_image(0, img, 900)
     
     # kernel = np.ones((2, 2), np.uint8)
     # erosion = cv2.erode(img, kernel, iterations = 1)
@@ -109,7 +111,8 @@ class ElementDetector:
     #     done = True
 
     # img = skel
-    self.gui.show_image(1, img, 900)
+    if self.gui:
+      self.gui.show_image(1, img, 900)
 
     # cv2.cv.CV_RETR_EXTERNAL cv2.cv.CV_RETR_LIST
     contours, hierarchy = cv2.findContours(img, cv2.cv.CV_RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
@@ -128,7 +131,8 @@ class ElementDetector:
         vertices = util.get_vertices(approx)
         vertex_count = len(vertices)
 
-        self.gui.raw_draw(tmpimg, vertices, util.rand_color(), str(b))
+        if self.gui:
+          self.gui.raw_draw(tmpimg, vertices, util.rand_color(), str(b))
         
         # Delete vertex that likely to be straight line
         vertices = util.reduce_vertex_by_length(vertices, 0.1)
@@ -150,7 +154,8 @@ class ElementDetector:
             # draw(newimg, Component(vertices, Polygon(), ""), rand_color())
           continue
 
-        self.gui.raw_draw(redimg, vertices, util.rand_color(), str(b))
+        if self.gui:
+          self.gui.raw_draw(redimg, vertices, util.rand_color(), str(b))
 
         if (vertex_count == 3):
           polygon = util.create_polygon(vertices)
@@ -183,8 +188,10 @@ class ElementDetector:
         # if polygon.area > size_threshold:
           # components.append(Component(vertices, polygon, "X"))
 
-    self.gui.show_image(2, tmpimg, 900)
-    self.gui.show_image(3, redimg, 900)
+    if self.gui:
+      self.gui.show_image(2, tmpimg, 900)
+    if self.gui:
+      self.gui.show_image(3, redimg, 900)
     components = util.remove_resembling_component(components, 0.5)
 
     components.append(root_component)
@@ -228,11 +235,13 @@ class ElementDetector:
 
     # for i in range(len(components)):
       # if components[i] is not None:
-    self.gui.draw_tree(newimg, root_component)
+    if self.gui:
+      self.gui.draw_tree(newimg, root_component)
     # cv2.imshow('Show', newimg)
     util.print_tree(root_component)
     
-    self.gui.show_image(4, newimg, 900)
+    if self.gui:
+      self.gui.show_image(4, newimg, 900)
 
     json_result = ""
     json_result += "{"
@@ -242,4 +251,5 @@ class ElementDetector:
     json_result += self.traverse_as_json(root_component)
     json_result += "]"
     json_result += "}"
+
     return json_result

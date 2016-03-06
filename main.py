@@ -1,12 +1,30 @@
 import sys
+import logging
+
 from PyQt4 import QtGui
 from gui import ImageDebuggerGUI
 from processor import ElementDetector
+from google import VisionAPI
+
+is_debugging = True
 
 if __name__ == "__main__":
-  app = QtGui.QApplication(sys.argv)
-  gui = ImageDebuggerGUI()
-  detector = ElementDetector(gui)
-  detector.detect("img/test10.jpg")
-  gui.show()
-  sys.exit(app.exec_())
+
+  logging.basicConfig(filename='out/debug.log',level=logging.DEBUG)
+  logging.getLogger().addHandler(logging.StreamHandler())
+
+  ocr = VisionAPI()
+  detector = ElementDetector()
+  detector.ocr = ocr
+
+  if (is_debugging):
+    app = QtGui.QApplication(sys.argv)
+    gui = ImageDebuggerGUI()
+    detector.gui = gui
+
+  print detector.detect("img/test10.jpg")
+  
+  if (is_debugging):
+    gui.show()
+    sys.exit(app.exec_())
+  
