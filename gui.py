@@ -66,8 +66,8 @@ class ImageDebuggerGUI(QtGui.QWidget):
     for c in root.children:
       self.draw_tree(img, c)
 
-  def draw(self, img, component, color):
-    vertices = component.vertices
+  def draw(self, img, element, color):
+    vertices = element.vertices
 
     vertex_count = len(vertices)
     for i in range(vertex_count):
@@ -75,7 +75,7 @@ class ImageDebuggerGUI(QtGui.QWidget):
       cv2.line(img, util.point_to_int_tuple(vertices[i]), util.point_to_int_tuple(vertices[(i + 1) % vertex_count]), color, 1)
 
     # centroid = util.point_to_int_tuple(polygon.centroid)
-    cv2.putText(img, component.description, util.point_to_int_tuple(vertices[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+    cv2.putText(img, element.description, util.point_to_int_tuple(vertices[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
   def raw_draw(self, img, vertices, color, tag):
     vertex_count = len(vertices)

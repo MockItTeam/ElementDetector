@@ -4,7 +4,7 @@ import sys
 import logging
 
 from shapely.geometry import Point, LineString, Polygon
-from component import Component
+from element import Element
 
 def dot(a, b):
     return a[0] * b[0] + a[1] * b[1]
@@ -136,14 +136,14 @@ def print_tree(root, space = ""):
   for c in root.children:
     print_tree(c, new_space)
 
-def remove_resembling_component(components, threshold):
-  for i in range(len(components)):
-    for j in range(i+1, len(components)):
-      if (is_resembling_subset(components[i].polygon, components[j].polygon, threshold)):
-        logging.info("Remove resembling component: " + components[i].name)
-        components.pop(i)
-        return remove_resembling_component(components, threshold)
-  return components
+def remove_resembling_element(elements, threshold):
+  for i in range(len(elements)):
+    for j in range(i+1, len(elements)):
+      if (is_resembling_subset(elements[i].polygon, elements[j].polygon, threshold)):
+        logging.info("Remove resembling element: " + elements[i].name)
+        elements.pop(i)
+        return remove_resembling_element(elements, threshold)
+  return elements
 
 def is_resembling_subset(a, b, threshold):
   if a.area > b.area:

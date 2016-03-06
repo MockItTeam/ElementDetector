@@ -5,7 +5,7 @@ import util
 import logging
 
 from shapely.geometry import Point, LineString, Polygon
-from component import *
+from element import *
 
 class ElementDetector:
 
@@ -117,10 +117,10 @@ class ElementDetector:
     # cv2.cv.CV_RETR_EXTERNAL cv2.cv.CV_RETR_LIST
     contours, hierarchy = cv2.findContours(img, cv2.cv.CV_RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
-    components = []
-    root_component = Component(0, [Point(0, 0), Point(0, img.shape[0]), Point(img.shape[1], img.shape[0]), Point(img.shape[1], 0)], Polygon([(0, 0), (0, img.shape[0]), (img.shape[1], img.shape[0]), (img.shape[1], 0)]), "Root")
-    root_component.description = Description.Root
-    root_area = root_component.polygon.area
+    elements = []
+    root_element = Element(0, [Point(0, 0), Point(0, img.shape[0]), Point(img.shape[1], img.shape[0]), Point(img.shape[1], 0)], Polygon([(0, 0), (0, img.shape[0]), (img.shape[1], img.shape[0]), (img.shape[1], 0)]), "Root")
+    root_element.description = Description.Root
+    root_area = root_element.polygon.area
     size_threshold = (0.05 / 100 * root_area)
     # print "Size Threshold: " + str(size_threshold)
 
@@ -151,7 +151,7 @@ class ElementDetector:
           continue
         if (vertex_count == 2):
           # if (LineString([vertices[0], vertices[1]]).length > 100):
-            # draw(newimg, Component(vertices, Polygon(), ""), rand_color())
+            # draw(newimg, Element(vertices, Polygon(), ""), rand_color())
           continue
 
         if self.gui:
@@ -162,16 +162,16 @@ class ElementDetector:
           # if not polygon.is_valid:
           #   continue
           if polygon.area > size_threshold:
-            components.append(TriangleComponent(b, vertices, polygon, "Tri#" + str(b)))
+            elements.append(TriangleElement(b, vertices, polygon, "Tri#" + str(b)))
           continue
         elif (vertex_count == 4):
           polygon = util.create_polygon(vertices)
           # if not polygon.is_valid:
           #   continue
           if polygon.area > size_threshold:
-            c = QuadrilateralComponent(b, vertices, polygon, "Quad#" + str(b))
+            c = QuadrilateralElement(b, vertices, polygon, "Quad#" + str(b))
             # c.name = c.geometry_type + str(c.ratio)
-            components.append(c)
+            elements.append(c)
           continue
         elif (vertex_count == 5):
           pass
@@ -186,45 +186,45 @@ class ElementDetector:
 
         # polygon = util.create_polygon(vertices)
         # if polygon.area > size_threshold:
-          # components.append(Component(vertices, polygon, "X"))
+          # elements.append(Element(vertices, polygon, "X"))
 
     if self.gui:
       self.gui.show_image(2, tmpimg, 900)
     if self.gui:
       self.gui.show_image(3, redimg, 900)
-    components = util.remove_resembling_component(components, 0.5)
+    elements = util.remove_resembling_element(elements, 0.5)
 
-    components.append(root_component)
-    components.sort()
+    elements.append(root_element)
+    elements.sort()
 
     ##### INITIATE TREE OPERATION !!
 
-    # # print [c for c in components]
-    for i in range(len(components)):
-      for j in range(i + 1, len(components)):
-        if components[i].polygon.within(components[j].polygon):
-          components[i].parent = components[j]
-          components[j].add_child(components[i])
-          # print "%s is in %s" % (components[i].name, components[j].name)
+    # # print [c for c in elements]
+    for i in range(len(elements)):
+      for j in range(i + 1, len(elements)):
+        if elements[i].polygon.within(elements[j].polygon):
+          elements[i].parent = elements[j]
+          elements[j].add_child(elements[i])
+          # print "%s is in %s" % (elements[i].name, elements[j].name)
           break
 
-    util.assign_depth(root_component)
+    util.assign_depth(root_element)
 
-    # for i in range(len(components)):
-      # c = components[i]
+    # for i in range(len(elements)):
+      # c = elements[i]
       # if c.is_a(Description.Triangle):
         # destroy_all(c.children)
 
-    self.destroy_all_children_of_triangle(root_component)
+    self.destroy_all_children_of_triangle(root_element)
 
-    self.detect_video_player(root_component)
-    self.detect_panel(root_component)
+    self.detect_video_player(root_element)
+    self.detect_panel(root_element)
 
     # TODO: Cannot do this anynore!! 
-    for i in range(len(components)):
-      c = components[i]
+    for i in range(len(elements)):
+      c = elements[i]
       if c.is_leaf:
-        # describe_component(components[i])
+        # describe_element(elements[i])
         if c.is_a(Description.HorizontalRectangle):
           if (c.ratio > 4):
             c.description = Description.TextField
@@ -233,12 +233,12 @@ class ElementDetector:
           c.name = c.description
           # print c.name
 
-    # for i in range(len(components)):
-      # if components[i] is not None:
+    # for i in range(len(elements)):
+      # if elements[i] is not None:
     if self.gui:
-      self.gui.draw_tree(newimg, root_component)
+      self.gui.draw_tree(newimg, root_element)
     # cv2.imshow('Show', newimg)
-    util.print_tree(root_component)
+    util.print_tree(root_element)
     
     if self.gui:
       self.gui.show_image(4, newimg, 900)
@@ -248,7 +248,7 @@ class ElementDetector:
     json_result += '"width":500,'
     json_result += '"height":500,'
     json_result += '"elements":['
-    json_result += self.traverse_as_json(root_component)
+    json_result += self.traverse_as_json(root_element)
     json_result += "]"
     json_result += "}"
 
