@@ -11,7 +11,7 @@ from oauth2client.client import GoogleCredentials
 
 DISCOVERY_URL='https://{api}.googleapis.com/$discovery/rest?version={apiVersion}'
 
-class VisionApi:
+class VisionAPI:
   """Construct and use the Google Vision API service."""
 
   def __init__(self, api_discovery_file='vision_api.json'):
@@ -52,47 +52,7 @@ class VisionApi:
       print("Http Error for %s: %s" % (image_file, e))
     except KeyError, e2:
       print("Key error: %s" % e2)
-# [END detect_text]
-
-def get_words(text):
-  return re.compile('\w+').findall(text)
-
-# [START extract_descrs]
-def extract_descriptions(input_filename, index, texts):
-  """Gets and indexes the text that was detected in the image."""
-  if texts:
-    document = ''
-    for text in texts:
-      try:
-        document += text['description']
-      except KeyError, e:
-        print('KeyError: %s' % text)
-    index.add(input_filename, document)
-    sys.stdout.write('.')  # Output a progress indicator.
-    sys.stdout.flush()
-  else:
-    if texts == []:
-      print('%s had no discernible text.' % input_filename)
-      index.set_contains_no_text(input_filename)
-# [END extract_descrs]
-
-
-# [START get_text]
-def get_text_from_file(vision, index, input_filename):
-  """Call the Vision API on a file and index the results."""
-  with open(input_filename, 'rb') as image:
-    texts = vision.detect_text(image)
-    extract_descriptions(input_filename, index, texts)
-
-
-def main(filename):
-  # Create a client object for the Vision API
-  vision = VisionApi()
-  with open(filename, 'rb') as image:
-    texts = vision.detect_text(image)
-    print texts
-  # get_text_from_file(vision, index, filename)
-# [END get_text]
+  # [END detect_text]
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(
@@ -101,4 +61,7 @@ if __name__ == '__main__':
     'filename',
     help='the image directory you\'d like to detect text in.')
   args = parser.parse_args()
-  main(args.filename)
+
+  vision = VisionAPI()
+  with open(args.filename, 'rb') as image:
+    print vision.detect_text(image)
