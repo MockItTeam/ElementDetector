@@ -22,7 +22,7 @@ if __name__ == "__main__":
     gui = ImageDebuggerGUI()
     detector.gui = gui
 
-  print detector.detect("img/test10.jpg")
+  print detector.detect("img/test7.jpg")
   
   if (is_debugging):
     gui.show()

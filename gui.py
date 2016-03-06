@@ -79,6 +79,8 @@ class ImageDebuggerGUI(QtGui.QWidget):
 
   def raw_draw(self, img, vertices, color, tag):
     vertex_count = len(vertices)
+    if vertex_count == 0:
+      return
     for i in range(vertex_count):
       cv2.circle(img, util.point_to_int_tuple(vertices[i]), 3, color, -1)
       cv2.line(img, util.point_to_int_tuple(vertices[i]), util.point_to_int_tuple(vertices[(i + 1) % vertex_count]), color, 1)

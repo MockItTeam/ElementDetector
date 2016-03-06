@@ -20,38 +20,39 @@ class VisionAPI:
       'vision', 'v1', credentials=self.credentials,
       discoveryServiceUrl=DISCOVERY_URL)
 
-  def detect_text(self, image_file, num_retries=3, max_results=6):
+  def detect_text(self, filename, num_retries=3, max_results=6):
     """Uses the Vision API to detect text in the given file.
     """
-    image_content = image_file.read()
+    with open(filename, 'rb') as image_file:
+      image_content = image_file.read()
 
-    batch_request = [{
-      'image': {
-        'content': base64.b64encode(image_content)
-      },
-      'features': [{
-        'type': 'TEXT_DETECTION',
-        'maxResults': max_results
-      }],
-      'imageContext': {
-        'languageHints': ['en']
-      }
-    }]
-    request = self.service.images().annotate(
-      body={'requests': batch_request})
+      batch_request = [{
+        'image': {
+          'content': base64.b64encode(image_content)
+        },
+        'features': [{
+          'type': 'TEXT_DETECTION',
+          'maxResults': max_results
+        }],
+        'imageContext': {
+          'languageHints': ['en']
+        }
+      }]
+      request = self.service.images().annotate(
+        body={'requests': batch_request})
 
-    try:
-      response = request.execute(num_retries=num_retries)
-      if ('responses' in response
-         and 'textAnnotations' in response['responses'][0]):
-        text_response = response['responses'][0]['textAnnotations']
-        return text_response
-      else:
-        return []
-    except errors.HttpError, e:
-      print("Http Error for %s: %s" % (image_file, e))
-    except KeyError, e2:
-      print("Key error: %s" % e2)
+      try:
+        response = request.execute(num_retries=num_retries)
+        if ('responses' in response
+           and 'textAnnotations' in response['responses'][0]):
+          text_response = response['responses'][0]['textAnnotations']
+          return text_response
+        else:
+          return []
+      except errors.HttpError, e:
+        print("Http Error for %s: %s" % (image_file, e))
+      except KeyError, e2:
+        print("Key error: %s" % e2)
   # [END detect_text]
 
 if __name__ == '__main__':
@@ -63,5 +64,5 @@ if __name__ == '__main__':
   args = parser.parse_args()
 
   vision = VisionAPI()
-  with open(args.filename, 'rb') as image:
-    print vision.detect_text(image)
+  print vision.detect_text(args.filename)
+    

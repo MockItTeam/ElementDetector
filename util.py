@@ -123,12 +123,22 @@ def rand_color():
   b = random.randint(0, 255)
   return r, g, b
 
-def assign_depth(root):
-  if len(root.children) == 0:
-    root.is_leaf = True
-  for c in root.children:
-    c.depth = root.depth + 1
-    assign_depth(c) 
+def construct_tree_by_within(elements):
+  elements.sort()
+  for i in range(len(elements)):
+    for j in range(i + 1, len(elements)):
+      if elements[i].polygon.within(elements[j].polygon):
+        elements[i].parent = elements[j]
+        elements[j].add_child(elements[i])
+        # print "%s is in %s" % (elements[i].name, elements[j].name)
+        break
+
+# def assign_depth(root):
+#   if len(root.children) == 0:
+#     root.is_leaf = True
+#   for c in root.children:
+#     c.depth = root.depth + 1
+#     assign_depth(c) 
 
 def print_tree(root, space = ""):
   logging.info(space + "- " + root.name + "_" +  str(root.depth) + ("~" if root.is_leaf else ""))
