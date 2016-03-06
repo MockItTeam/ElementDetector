@@ -1,4 +1,5 @@
 import util
+from shapely.geometry import Point
 # from enum import Enum
 
 SQUARE_THRESHOLD = 0.2
@@ -6,6 +7,7 @@ SQUARE_THRESHOLD = 0.2
 class Description:
   # Primary
   Unknown = "Unknown"
+
   Quadrilateral = "Quadrilateral"
   Triangle = "Triangle"
 
@@ -16,13 +18,15 @@ class Description:
   VerticalRectangle = "VerticalRectangle"
 
   # Tertiary
+  Root = "Root"
   TextField = "TextField"
   TextArea = "TextArea"
   Panel = "Panel"
   VideoPlayer = "VideoPlayer"
 
 class Component:
-  def __init__(self, vertices, polygon, name):
+  def __init__(self, c_id, vertices, polygon, name):
+    self.id = c_id
     self.vertices = vertices
     self.polygon = polygon
     self.name = name
@@ -31,8 +35,31 @@ class Component:
     self.is_leaf = False
     self.description = Description.Unknown
 
+    self.origin = Point(0, 0)
+    self.width = 0
+    self.height = 0
+
   def add_child(self, child):
     self.children.append(child)
+
+  def as_json(self):
+    json = ""
+    json += "{"
+    json += '"id":' + str(self.id) + ","
+    json += '"type":"' + self.description + '",'
+    json += '"x":' + str(int(self.origin.x)) + ","
+    json += '"y":' + str(int(self.origin.y)) + ","
+    json += '"z":' + str(self.depth) + ","
+    json += '"width":' + str(int(self.width)) + ","
+    json += '"height":' + str(int(self.height)) + ","
+    json += '"children_id":['
+    for i in range(len(self.children)):
+      if i != 0:
+        json += ","
+      json += str(self.children[i].id)
+    json += "]"
+    json += "}"
+    return json
 
   @property
   def parent(self):
@@ -64,8 +91,8 @@ class Component:
 
 
 class TriangleComponent(Component):
-  def __init__(self, vertices, polygon, name):
-    Component.__init__(self, vertices, polygon, name);
+  def __init__(self, c_id, vertices, polygon, name):
+    Component.__init__(self, c_id, vertices, polygon, name);
 
     if (len(vertices) != 3):
       raise Exception('TriangleComponent', 'Need exactly 3 vertices')
@@ -75,8 +102,8 @@ class TriangleComponent(Component):
     self.description = Description.Triangle
 
 class QuadrilateralComponent(Component):
-  def __init__(self, vertices, polygon, name):
-    Component.__init__(self, vertices, polygon, name);
+  def __init__(self, c_id, vertices, polygon, name):
+    Component.__init__(self, c_id, vertices, polygon, name);
 
     if (len(vertices) != 4):
       raise Exception('QuadrilateralComponent', 'Need exactly 4 vertices')

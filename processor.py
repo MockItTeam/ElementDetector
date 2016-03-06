@@ -2,81 +2,15 @@ import sys
 import numpy as np
 import cv2
 import util
+import logging
 
 from shapely.geometry import Point, LineString, Polygon
 from component import *
 
-from PyQt4 import QtCore, QtGui
+class ElementDetector:
 
-class ImgProc(QtGui.QWidget):
-  def __init__(self, parent = None):
-    super(ImgProc, self).__init__(parent)
-
-    # layout_a = QtGui.QVBoxLayout()
-
-    group_box = QtGui.QGroupBox('this is my groupbox')
-    grid_layout = QtGui.QGridLayout()
-    grid_layout.setSpacing(10)
-    group_box.setLayout(grid_layout)
-    # layout = QtGui.QHBoxLayout()
-    # layout_a.addWidget(layout)
-
-    # self.l1 = QtGui.QLabel("Threshold")
-    # self.l1.setAlignment(QtCore.Qt.AlignCenter)
-    # layout.addWidget(self.l1)
-
-    # self.sl = QtGui.QSlider(QtCore.Qt.Horizontal)
-    # self.sl.setMinimum(40)
-    # self.sl.setMaximum(100)
-    # self.sl.setValue(3)
-    # self.sl.setTickPosition(QtGui.QSlider.TicksBelow)
-    # self.sl.setTickInterval(1)
-    # layout.addWidget(self.sl, 0, 0)
-
-    scroll_area = QtGui.QScrollArea()
-    scroll_area.setWidget(group_box)
-    scroll_area.setWidgetResizable(True)
-    scroll_area.setFixedWidth(1200)
-    scroll_area.setFixedHeight(800)
-    
-    layout = QtGui.QVBoxLayout(self)
-    layout.addWidget(scroll_area)
-
-    self.pic_labels = []
-
-    for i in range(5):
-      pic_label = QtGui.QLabel()
-      pic_label.setGeometry(10, 10, 100, 100)
-      grid_layout.addWidget(pic_label, 5 - i, 0)
-      self.pic_labels.append(pic_label)
-
-    # self.sl.valueChanged.connect(self.valuechange)
-    self.setLayout(layout)
-    self.setWindowTitle("Debug IMG")
-
-    self.process_image(0)
-    self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
-
-  def mouseReleaseEvent(self, QMouseEvent):
-    # cursor = QtGui.QCursor()
-    sys.exit(0)
-
-  def valuechange(self):
-    val = self.sl.value()
-    self.l1.setText(str(val))
-    cv2.destroyAllWindows()
-
-  def show_image(self, index, img, height):
-    tmp = "out/ " + str(index) + ".jpg"
-    cv2.imwrite(tmp, img)
-    pixmap = QtGui.QPixmap(tmp)
-    pixmap = pixmap.scaledToHeight(height)
-    self.pic_labels[index].setPixmap(pixmap)
-
-  def draw_tree(self, root):
-    self.draw(self.newimg, root, util.rand_color())
-    for c in root.children:
-      self.draw_tree(c)
+  def __init__(self, gui):
+    self.gui = gui
 
   def destroy_all_children(self, root):
     for i in range(len(root.children)):
@@ -84,10 +18,18 @@ class ImgProc(QtGui.QWidget):
       root.children[i] = None
     root.children = []
 
+  def traverse_as_json(self, root):
+    json = root.as_json()
+    for i in range(len(root.children)):
+      # if i != 0:
+      json += ","
+      json += self.traverse_as_json(root.children[i])
+    return json
+
   def destroy_all_children_of_triangle(self, root):
     if root.is_a(Description.Triangle):
       for i in range(len(root.children)):
-        print "Destroyed because its parent is Triangle: " + root.children[i].name
+        logging.info("Destroyed because its parent is Triangle: " + root.children[i].name)
       self.destroy_all_children(root)
 
     for c in root.children:
@@ -97,7 +39,7 @@ class ImgProc(QtGui.QWidget):
 
     if len(root.children) == 1 and root.is_a(Description.HorizontalRectangle) and root.children[0].is_a(Description.Triangle):
       root.description = Description.VideoPlayer
-      print "Found VideoPlayer Rect: %s and Tri: %s" % (root.name, root.children[0].name)
+      logging.info("Found VideoPlayer Rect: %s and Tri: %s" % (root.name, root.children[0].name))
       root.name = root.description
       self.destroy_all_children(root)
 
@@ -113,28 +55,8 @@ class ImgProc(QtGui.QWidget):
     for c in root.children:
       self.detect_panel(c)
 
-  def draw(self, img, component, color):
-    vertices = component.vertices
-
-    vertex_count = len(vertices)
-    for i in range(vertex_count):
-      cv2.circle(img, util.point_to_int_tuple(vertices[i]), 3, color, -1)
-      # cv2.putText(img, str(i), vertices[i].xy, cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
-      cv2.line(img, util.point_to_int_tuple(vertices[i]), util.point_to_int_tuple(vertices[(i + 1) % vertex_count]), color, 1)
-
-    # centroid = util.point_to_int_tuple(polygon.centroid)
-    # cv2.circle(img, centroid, 1, color, -1)
-    cv2.putText(img, component.description, util.point_to_int_tuple(vertices[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-
-  def raw_draw(self, img, vertices, color, tag):
-    vertex_count = len(vertices)
-    for i in range(vertex_count):
-      cv2.circle(img, util.point_to_int_tuple(vertices[i]), 3, color, -1)
-      cv2.line(img, util.point_to_int_tuple(vertices[i]), util.point_to_int_tuple(vertices[(i + 1) % vertex_count]), color, 1)
-    cv2.putText(img, tag, util.point_to_int_tuple(vertices[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-
-  def process_image(self, val):
-    img = cv2.imread('img/test10.jpg')
+  def detect(self, filename):
+    img = cv2.imread(filename)
     prefer_height = 1000
     img = cv2.resize(img, (int(1.0 * img.shape[1] * prefer_height / img.shape[0] ), prefer_height))
     
@@ -148,15 +70,14 @@ class ImgProc(QtGui.QWidget):
             
     img = cv2.bitwise_not(img)
 
-    self.show_image(0, img, 900)
+    self.gui.show_image(0, img, 900)
     
-
     # kernel = np.ones((2, 2), np.uint8)
     # erosion = cv2.erode(img, kernel, iterations = 1)
     # erosion = img # Skip erosion
 
     height, width = img.shape
-    self.newimg = np.zeros((height, width, 3), np.uint8)
+    newimg = np.zeros((height, width, 3), np.uint8)
     tmpimg = np.zeros((height, width, 3), np.uint8)
     redimg = np.zeros((height, width, 3), np.uint8)
     
@@ -188,18 +109,14 @@ class ImgProc(QtGui.QWidget):
     #     done = True
 
     # img = skel
-    self.show_image(1, img, 900)
-
-
-
-    # self.show_image(0, img)
-
+    self.gui.show_image(1, img, 900)
 
     # cv2.cv.CV_RETR_EXTERNAL cv2.cv.CV_RETR_LIST
     contours, hierarchy = cv2.findContours(img, cv2.cv.CV_RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
     components = []
-    root_component = Component([Point(0, 0), Point(0, img.shape[0]), Point(img.shape[1], img.shape[0]), Point(img.shape[1], 0)], Polygon([(0, 0), (0, img.shape[0]), (img.shape[1], img.shape[0]), (img.shape[1], 0)]), "Root")
+    root_component = Component(0, [Point(0, 0), Point(0, img.shape[0]), Point(img.shape[1], img.shape[0]), Point(img.shape[1], 0)], Polygon([(0, 0), (0, img.shape[0]), (img.shape[1], img.shape[0]), (img.shape[1], 0)]), "Root")
+    root_component.description = Description.Root
     root_area = root_component.polygon.area
     size_threshold = (0.05 / 100 * root_area)
     # print "Size Threshold: " + str(size_threshold)
@@ -211,7 +128,7 @@ class ImgProc(QtGui.QWidget):
         vertices = util.get_vertices(approx)
         vertex_count = len(vertices)
 
-        self.raw_draw(tmpimg, vertices, util.rand_color(), str(b))
+        self.gui.raw_draw(tmpimg, vertices, util.rand_color(), str(b))
         
         # Delete vertex that likely to be straight line
         vertices = util.reduce_vertex_by_length(vertices, 0.1)
@@ -230,24 +147,24 @@ class ImgProc(QtGui.QWidget):
           continue
         if (vertex_count == 2):
           # if (LineString([vertices[0], vertices[1]]).length > 100):
-            # draw(self.newimg, Component(vertices, Polygon(), ""), rand_color())
+            # draw(newimg, Component(vertices, Polygon(), ""), rand_color())
           continue
 
-        self.raw_draw(redimg, vertices, util.rand_color(), str(b))
+        self.gui.raw_draw(redimg, vertices, util.rand_color(), str(b))
 
         if (vertex_count == 3):
           polygon = util.create_polygon(vertices)
           # if not polygon.is_valid:
           #   continue
           if polygon.area > size_threshold:
-            components.append(TriangleComponent(vertices, polygon, "Tri#" + str(b)))
+            components.append(TriangleComponent(b, vertices, polygon, "Tri#" + str(b)))
           continue
         elif (vertex_count == 4):
           polygon = util.create_polygon(vertices)
           # if not polygon.is_valid:
           #   continue
           if polygon.area > size_threshold:
-            c = QuadrilateralComponent(vertices, polygon, "Quad#" + str(b))
+            c = QuadrilateralComponent(b, vertices, polygon, "Quad#" + str(b))
             # c.name = c.geometry_type + str(c.ratio)
             components.append(c)
           continue
@@ -266,13 +183,12 @@ class ImgProc(QtGui.QWidget):
         # if polygon.area > size_threshold:
           # components.append(Component(vertices, polygon, "X"))
 
-    self.show_image(2, tmpimg, 900)
-    self.show_image(3, redimg, 900)
+    self.gui.show_image(2, tmpimg, 900)
+    self.gui.show_image(3, redimg, 900)
     components = util.remove_resembling_component(components, 0.5)
 
     components.append(root_component)
     components.sort()
-    
 
     ##### INITIATE TREE OPERATION !!
 
@@ -297,7 +213,6 @@ class ImgProc(QtGui.QWidget):
     self.detect_video_player(root_component)
     self.detect_panel(root_component)
 
-
     # TODO: Cannot do this anynore!! 
     for i in range(len(components)):
       c = components[i]
@@ -311,18 +226,20 @@ class ImgProc(QtGui.QWidget):
           c.name = c.description
           # print c.name
 
-
-
     # for i in range(len(components)):
       # if components[i] is not None:
-    self.draw_tree(root_component)
-    # cv2.imshow('Show', self.newimg)
+    self.gui.draw_tree(newimg, root_component)
+    # cv2.imshow('Show', newimg)
     util.print_tree(root_component)
-    self.show_image(4, self.newimg, 900)
+    
+    self.gui.show_image(4, newimg, 900)
 
-if __name__ == "__main__":
-  app = QtGui.QApplication(sys.argv)
-  ui = ImgProc()
-  ui.show()
-  sys.exit(app.exec_())
-  # main(sys.argv)
+    json_result = ""
+    json_result += "{"
+    json_result += '"width":500,'
+    json_result += '"height":500,'
+    json_result += '"elements":['
+    json_result += self.traverse_as_json(root_component)
+    json_result += "]"
+    json_result += "}"
+    return json_result
