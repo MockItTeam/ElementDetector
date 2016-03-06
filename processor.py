@@ -118,21 +118,21 @@ class ElementDetector:
     contours, hierarchy = cv2.findContours(img, cv2.cv.CV_RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
     elements = []
-    root_element = Element(0, [Point(0, 0), Point(0, img.shape[0]), Point(img.shape[1], img.shape[0]), Point(img.shape[1], 0)], Polygon([(0, 0), (0, img.shape[0]), (img.shape[1], img.shape[0]), (img.shape[1], 0)]), "Root")
+    root_element = Element(0, [Point(0, 0), Point(0, img.shape[0]), Point(img.shape[1], img.shape[0]), Point(img.shape[1], 0)], "Root")
     root_element.description = Description.Root
     root_area = root_element.polygon.area
     size_threshold = (0.05 / 100 * root_area)
     # print "Size Threshold: " + str(size_threshold)
 
-    for b, cnt in enumerate(contours):
-      if hierarchy[0,b,3] == -1:
+    for number, cnt in enumerate(contours):
+      if hierarchy[0, number, 3] == -1:
         approx = cv2.approxPolyDP(cnt, 0.01 * cv2.arcLength(cnt, True), True)
 
         vertices = util.get_vertices(approx)
         vertex_count = len(vertices)
 
         if self.gui:
-          self.gui.raw_draw(tmpimg, vertices, util.rand_color(), str(b))
+          self.gui.raw_draw(tmpimg, vertices, util.rand_color(), str(number))
         
         # Delete vertex that likely to be straight line
         vertices = util.reduce_vertex_by_length(vertices, 0.1)
@@ -151,27 +151,21 @@ class ElementDetector:
           continue
         if (vertex_count == 2):
           # if (LineString([vertices[0], vertices[1]]).length > 100):
-            # draw(newimg, Element(vertices, Polygon(), ""), rand_color())
+            # draw(newimg, Element(vertices, ""), rand_color())
           continue
 
         if self.gui:
-          self.gui.raw_draw(redimg, vertices, util.rand_color(), str(b))
+          self.gui.raw_draw(redimg, vertices, util.rand_color(), str(number))
 
         if (vertex_count == 3):
-          polygon = util.create_polygon(vertices)
-          # if not polygon.is_valid:
-          #   continue
-          if polygon.area > size_threshold:
-            elements.append(TriangleElement(b, vertices, polygon, "Tri#" + str(b)))
+          e = TriangleElement(number, vertices, "Tri#" + str(number))
+          if e.polygon.area > size_threshold:
+            elements.append(e)
           continue
         elif (vertex_count == 4):
-          polygon = util.create_polygon(vertices)
-          # if not polygon.is_valid:
-          #   continue
-          if polygon.area > size_threshold:
-            c = QuadrilateralElement(b, vertices, polygon, "Quad#" + str(b))
-            # c.name = c.geometry_type + str(c.ratio)
-            elements.append(c)
+          e = QuadrilateralElement(number, vertices, "Quad#" + str(number))
+          if e.polygon.area > size_threshold:
+            elements.append(e)
           continue
         elif (vertex_count == 5):
           pass
@@ -183,10 +177,6 @@ class ElementDetector:
           pass
         else:
           pass
-
-        # polygon = util.create_polygon(vertices)
-        # if polygon.area > size_threshold:
-          # elements.append(Element(vertices, polygon, "X"))
 
     if self.gui:
       self.gui.show_image(2, tmpimg, 900)
@@ -222,16 +212,15 @@ class ElementDetector:
 
     # TODO: Cannot do this anynore!! 
     for i in range(len(elements)):
-      c = elements[i]
-      if c.is_leaf:
+      e = elements[i]
+      if e.is_leaf:
         # describe_element(elements[i])
-        if c.is_a(Description.HorizontalRectangle):
-          if (c.ratio > 4):
-            c.description = Description.TextField
+        if e.is_a(Description.HorizontalRectangle):
+          if (e.ratio > 4):
+            e.description = Description.TextField
           else:
-            c.description = Description.TextArea
-          c.name = c.description
-          # print c.name
+            e.description = Description.TextArea
+          e.name = e.description
 
     # for i in range(len(elements)):
       # if elements[i] is not None:
