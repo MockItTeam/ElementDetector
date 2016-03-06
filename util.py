@@ -1,5 +1,7 @@
 import math
 import random
+import sys
+import logging
 
 from shapely.geometry import Point, LineString, Polygon
 from component import Component
@@ -129,7 +131,7 @@ def assign_depth(root):
     assign_depth(c) 
 
 def print_tree(root, space = ""):
-  print space + "- " + root.name + "_" +  str(root.depth) + ("~" if root.is_leaf else "")
+  logging.info(space + "- " + root.name + "_" +  str(root.depth) + ("~" if root.is_leaf else ""))
   new_space = space + "-"
   for c in root.children:
     print_tree(c, new_space)
@@ -138,7 +140,7 @@ def remove_resembling_component(components, threshold):
   for i in range(len(components)):
     for j in range(i+1, len(components)):
       if (is_resembling_subset(components[i].polygon, components[j].polygon, threshold)):
-        print "Remove resembling component: " + components[i].name 
+        logging.info("Remove resembling component: " + components[i].name)
         components.pop(i)
         return remove_resembling_component(components, threshold)
   return components
