@@ -30,6 +30,7 @@ class Element:
     self.id = e_id
     self.vertices = vertices
     self.polygon = util.create_polygon(vertices)
+    
     self.name = name
     self.children = []
     self.depth = 0
