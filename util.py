@@ -193,3 +193,42 @@ def is_resembling_subset(a, b, threshold):
   else:
     return False
 
+#If b upper a then return true
+def is_upper(vertices_a,vertices_b):
+  point_y_min_a = min(vertices_a, key=lambda v: v.y)
+  point_y_max_b = max(vertices_b, key=lambda v: v.y)
+  return point_y_max_b < point_y_min_a
+
+#If b lower a then return true
+def is_lower(vertices_a,vertices_b):
+  point_y_max_a = max(vertices_a, key=lambda v: v.y)
+  point_y_min_b = min(vertices_b, key=lambda v: v.y)
+  return point_y_max_a < point_y_min_b
+
+#If b left a then return true
+def is_left(vertices_a,vertices_b):
+  point_x_min_a = min(vertices_a, key=lambda v: v.x)
+  point_x_max_b = max(vertices_b, key=lambda v: v.x)
+  return point_x_min_a > point_x_max_b
+
+#If b right a then return true
+def is_right(vertices_a,vertices_b):
+  point_x_max_a = max(vertices_a, key=lambda v: v.x)
+  point_x_min_b = min(vertices_b, key=lambda v: v.x)
+  return point_x_max_a < point_x_min_b
+
+#If b upper-left a then return true
+def is_upper_left(vertices_a,vertices_b):
+  return is_upper(vertices_a,vertices_b) and is_left(vertices_a,vertices_b)
+
+#If b upper-left a then return true
+def is_upper_right(vertices_a,vertices_b):
+  return is_upper(vertices_a,vertices_b) and is_right(vertices_a,vertices_b) 
+
+#If b upper-left a then return true
+def is_lower_left(vertices_a,vertices_b):
+  return is_lower(vertices_a,vertices_b) and is_left(vertices_a,vertices_b)
+
+#If b upper-left a then return true
+def is_lower_right(vertices_a,vertices_b):
+  return is_lower(vertices_a,vertices_b) and is_right(vertices_a,vertices_b)
