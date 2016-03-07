@@ -55,7 +55,7 @@ class ImageDebuggerGUI(QtGui.QWidget):
     cv2.destroyAllWindows()
 
   def show_image(self, index, img, height):
-    tmp = "out/ " + str(index) + ".jpg"
+    tmp = "out/" + str(index) + ".jpg"
     cv2.imwrite(tmp, img)
     pixmap = QtGui.QPixmap(tmp)
     pixmap = pixmap.scaledToHeight(height)
@@ -66,8 +66,8 @@ class ImageDebuggerGUI(QtGui.QWidget):
     for c in root.children:
       self.draw_tree(img, c)
 
-  def draw(self, img, component, color):
-    vertices = component.vertices
+  def draw(self, img, element, color):
+    vertices = element.vertices
 
     vertex_count = len(vertices)
     for i in range(vertex_count):
@@ -75,10 +75,12 @@ class ImageDebuggerGUI(QtGui.QWidget):
       cv2.line(img, util.point_to_int_tuple(vertices[i]), util.point_to_int_tuple(vertices[(i + 1) % vertex_count]), color, 1)
 
     # centroid = util.point_to_int_tuple(polygon.centroid)
-    cv2.putText(img, component.description, util.point_to_int_tuple(vertices[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+    cv2.putText(img, element.name, util.point_to_int_tuple(vertices[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
   def raw_draw(self, img, vertices, color, tag):
     vertex_count = len(vertices)
+    if vertex_count == 0:
+      return
     for i in range(vertex_count):
       cv2.circle(img, util.point_to_int_tuple(vertices[i]), 3, color, -1)
       cv2.line(img, util.point_to_int_tuple(vertices[i]), util.point_to_int_tuple(vertices[(i + 1) % vertex_count]), color, 1)

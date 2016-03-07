@@ -23,26 +23,31 @@ class Description:
   TextArea = "TextArea"
   Panel = "Panel"
   VideoPlayer = "VideoPlayer"
+  Text = "Text"
 
-class Component:
-  def __init__(self, c_id, vertices, polygon, name):
-    self.id = c_id
+class Element:
+  def __init__(self, e_id, vertices, name):
+    self.id = e_id
     self.vertices = vertices
-    self.polygon = polygon
+    self.polygon = util.create_polygon(vertices)
     self.name = name
     self.children = []
     self.depth = 0
-    self.is_leaf = False
+    # self.is_leaf = False
     self.description = Description.Unknown
 
-    self.origin = Point(0, 0)
-    self.width = 0
-    self.height = 0
+    min_x, min_y, max_x, max_y = util.min_max_vertices(vertices)
+    self.origin = Point(min_x, min_y)
+    self.width = max_x - min_x
+    self.height = max_y - min_y
+
+  def is_leaf(self):
+    return len(self.children) == 0
 
   def add_child(self, child):
     self.children.append(child)
 
-  def as_json(self):
+  def as_json(self, details=""):
     json = ""
     json += "{"
     json += '"id":' + str(self.id) + ","
@@ -52,6 +57,7 @@ class Component:
     json += '"z":' + str(self.depth) + ","
     json += '"width":' + str(int(self.width)) + ","
     json += '"height":' + str(int(self.height)) + ","
+    json += details
     json += '"children_id":['
     for i in range(len(self.children)):
       if i != 0:
@@ -89,29 +95,35 @@ class Component:
   def __unicode__(self):
     return u"?"
 
+class TextElement(Element):
+  def __init__(self, e_id, vertices, name, text):
+    Element.__init__(self, e_id, vertices, name)    
+    self.description = Description.Text
+    self.text = text
 
-class TriangleComponent(Component):
-  def __init__(self, c_id, vertices, polygon, name):
-    Component.__init__(self, c_id, vertices, polygon, name);
+  def as_json(self, details=""):
+    return Element.as_json(self, '"text":"' + str(self.text) + '",')
+
+class TriangleElement(Element):
+  def __init__(self, e_id, vertices, name):
+    Element.__init__(self, e_id, vertices, name)
 
     if (len(vertices) != 3):
-      raise Exception('TriangleComponent', 'Need exactly 3 vertices')
-    self.describe()
+      raise Exception('TriangleElement', 'Need exactly 3 vertices')
 
-  def describe(self):
     self.description = Description.Triangle
 
-class QuadrilateralComponent(Component):
-  def __init__(self, c_id, vertices, polygon, name):
-    Component.__init__(self, c_id, vertices, polygon, name);
+class QuadrilateralElement(Element):
+  def __init__(self, e_id, vertices, name):
+    Element.__init__(self, e_id, vertices, name)
 
     if (len(vertices) != 4):
-      raise Exception('QuadrilateralComponent', 'Need exactly 4 vertices')
+      raise Exception('QuadrilateralElement', 'Need exactly 4 vertices')
     # self.describe = Geometry.Quadrilateral
     self.ratio = 0   # X-Parallel / Y-Parallel
-    self.describe()
+    self.__describe()
 
-  def describe(self):
+  def __describe(self):
     self.description = Description.Quadrilateral
 
     side_1_axis = util.find_parallel_axis(self.vertices[0], self.vertices[1])
