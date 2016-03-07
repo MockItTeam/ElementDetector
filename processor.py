@@ -65,31 +65,35 @@ class ElementDetector:
     for c in root.children:
       self.interpret_leaf_rectangle(c)
 
-  def append_text_elements(self, filename, elements):
+  def append_text_elements(self, filename, root, last_id):
     pass
-    # if self.ocr:
-    #   response = self.ocr.detect_text(filename)
-    #   logging.info(response)
-    #   texts = response[0]["description"].split("\n")
-    #   print texts
-    #   print len(texts)
-    #   for i in range(len(texts) - 1):
-    #     text = texts[i]
-    #     print text
-    #     print i
-    #     vertice = response[0]["boundingPoly"]["vertices"][i]
-    #     x = vertice["x"]
-    #     y = vertice["y"]
+    if self.ocr:
+      response = self.ocr.detect_text(filename)
+      logging.info(response)
+      texts = response[0]["description"].split("\n")
+      texts = texts[:len(texts)-1]
+      # texts = ["hello", "world"]
+      
+      print texts
+      print len(texts)
+      for i in range(len(texts)):
+        text = texts[i]
+        print text
+        # vertice = response[0]["boundingPoly"]["vertices"][i]
+       
+        # TODO: Generate Unique ID
+        last_id += 1
+        e_id = last_id
 
-    #     # TODO: Generate Unique ID
-    #     e_id = 999
+        # TODO: Find proper position and size
+        x = 100
+        y = 60 * (i + 1)
+        width = 200
+        height = 50
 
-    #     # TODO: Find proper size
-    #     width = 10000
-    #     height = 10000
-
-    #     vertices = [Point(x, y), Point(x, y + height), Point(x + width, y + height), Point(x + width, 0)]
-    #     element = TextElement(e_id, vertices, text, text)
+        vertices = [Point(x, y), Point(x, y + height), Point(x + width, y + height), Point(x + width, y)]
+        element = TextElement(e_id, vertices, text, text)
+        root.add_child(element)
 
   def detect(self, filename):
     img = cv2.imread(filename)
@@ -132,7 +136,9 @@ class ElementDetector:
     root_area = root_element.polygon.area
     size_threshold = (0.05 / 100 * root_area)
 
+    last_number = 0
     for number, cnt in enumerate(contours):
+      last_number = number
       if hierarchy[0, number, 3] == -1:
         approx = cv2.approxPolyDP(cnt, 0.01 * cv2.arcLength(cnt, True), True)
 
@@ -148,6 +154,7 @@ class ElementDetector:
         vertices = util.reduce_vertex_by_angle(vertices, 145)
         vertices = util.reduce_vertex_by_length(vertices, 0.25)
         vertices = util.reduce_vertex_by_angle(vertices, 130)
+        # vertices = util.reduce_vertex_by_length(vertices, 0.3)
 
         vertex_count = len(vertices)
 
@@ -175,10 +182,10 @@ class ElementDetector:
     elements = util.remove_resembling_element(elements, 0.5)
     elements.append(root_element)
     
-    self.append_text_elements(filename, elements)
 
     # START HANDLING ELEMENTS AS TREE
-    util.construct_tree_by_within(elements)
+    util.construct_tree_by_within(elements) # use root_element from now on
+    self.append_text_elements(filename, root_element, last_number)
     self.destroy_all_children_of_triangle(root_element)
     self.detect_video_player(root_element)
     self.detect_panel(root_element)
@@ -192,6 +199,7 @@ class ElementDetector:
     if self.gui:
       self.gui.show_image(4, newimg, 900)
 
+    util.assign_depth(root_element)
     json_result = ""
     json_result += "{"
     json_result += '"width":' + str(width) + ','

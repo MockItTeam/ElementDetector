@@ -55,6 +55,23 @@ def find_angle(a, vertex, b):
   else: 
     return ang_deg
 
+def min_max_vertices(vertices):
+  min_x = vertices[0].x
+  min_y = vertices[0].y
+  max_x = vertices[0].x
+  max_y = vertices[0].y
+  for v in vertices:
+    if v.x < min_x:
+      min_x = v.x
+    if v.x > max_x:
+      max_x = v.x
+    if v.y < min_y:
+      min_y = v.y
+    if v.y > max_y:
+      max_y = v.y
+
+  return min_x, min_y, max_x, max_y
+
 def reduce_vertex_by_length(vertices, threshold):
   # vertices = list(vertices)
   # out = []
@@ -133,12 +150,12 @@ def construct_tree_by_within(elements):
         # print "%s is in %s" % (elements[i].name, elements[j].name)
         break
 
-# def assign_depth(root):
-#   if len(root.children) == 0:
-#     root.is_leaf = True
-#   for c in root.children:
-#     c.depth = root.depth + 1
-#     assign_depth(c) 
+def assign_depth(root):
+  if len(root.children) == 0:
+    root.is_leaf = True
+  for c in root.children:
+    c.depth = root.depth + 1
+    assign_depth(c) 
 
 def print_tree(root, space = ""):
   logging.info(space + "- " + root.name + "_" +  str(root.depth) + ("~" if root.is_leaf else ""))

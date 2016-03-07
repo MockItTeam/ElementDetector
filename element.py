@@ -36,9 +36,10 @@ class Element:
     # self.is_leaf = False
     self.description = Description.Unknown
 
-    self.origin = Point(0, 0)
-    self.width = 0
-    self.height = 0
+    min_x, min_y, max_x, max_y = util.min_max_vertices(vertices)
+    self.origin = Point(min_x, min_y)
+    self.width = max_x - min_x
+    self.height = max_y - min_y
 
   def is_leaf(self):
     return len(self.children) == 0
@@ -46,7 +47,7 @@ class Element:
   def add_child(self, child):
     self.children.append(child)
 
-  def as_json(self):
+  def as_json(self, details=""):
     json = ""
     json += "{"
     json += '"id":' + str(self.id) + ","
@@ -56,6 +57,7 @@ class Element:
     json += '"z":' + str(self.depth) + ","
     json += '"width":' + str(int(self.width)) + ","
     json += '"height":' + str(int(self.height)) + ","
+    json += details
     json += '"children_id":['
     for i in range(len(self.children)):
       if i != 0:
@@ -98,6 +100,9 @@ class TextElement(Element):
     Element.__init__(self, e_id, vertices, name)    
     self.description = Description.Text
     self.text = text
+
+  def as_json(self, details=""):
+    return Element.as_json(self, '"text":"' + str(self.text) + '",')
 
 class TriangleElement(Element):
   def __init__(self, e_id, vertices, name):

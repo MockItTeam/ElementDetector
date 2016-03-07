@@ -6,7 +6,7 @@ from gui import ImageDebuggerGUI
 from processor import ElementDetector
 from google import VisionAPI
 
-is_debugging = True
+is_gui_debugging = True
 
 if __name__ == "__main__":
 
@@ -17,14 +17,14 @@ if __name__ == "__main__":
   detector = ElementDetector()
   detector.ocr = ocr
 
-  if (is_debugging):
+  if (is_gui_debugging):
     app = QtGui.QApplication(sys.argv)
     gui = ImageDebuggerGUI()
     detector.gui = gui
 
   print detector.detect("img/test7.jpg")
   
-  if (is_debugging):
+  if (is_gui_debugging):
     gui.show()
     sys.exit(app.exec_())
   
