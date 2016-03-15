@@ -32,6 +32,12 @@ def find_parallel_axis(p1, p2):
   else:
     return "y"
 
+def all_are(items, description):
+  for item in items:
+    if item.description != description:
+      return False
+  return True
+
 def find_angle(a, vertex, b):
   # angle(Point(0,-1), Point(0,0), Point(0,1))
   # print "%d %d %d %d %d %d" % (a.x, a.y, vertex.x, vertex.y, b.x, b.y)
@@ -73,6 +79,16 @@ def min_max_vertices(vertices):
   return min_x, min_y, max_x, max_y
 
 def reduce_vertex_by_length(vertices, threshold):
+  
+  vertex_count = len(vertices)
+  if vertex_count >= 2:
+    for i in range(vertex_count):
+      if vertices[i].distance(vertices[(i + 1) % vertex_count]) < threshold:
+          vertices.pop(i)
+          return reduce_vertex_by_length(vertices, threshold)
+  return vertices
+
+def reduce_vertex_by_average_length(vertices, threshold):
   # vertices = list(vertices)
   # out = []
   vertex_count = len(vertices)
@@ -92,7 +108,7 @@ def reduce_vertex_by_length(vertices, threshold):
     for i in range(vertex_count):
       if vertices[i].distance(vertices[(i + 1) % vertex_count]) < threshold * average:
         vertices.pop(i)
-        return reduce_vertex_by_length(vertices, threshold)
+        return reduce_vertex_by_average_length(vertices, threshold)
 
   # out = vertices
   return vertices
@@ -151,14 +167,14 @@ def construct_tree_by_within(elements):
         break
 
 def assign_depth(root):
-  if len(root.children) == 0:
-    root.is_leaf = True
+  # if len(root.children) == 0:
+    # root.is_leaf = True
   for c in root.children:
     c.depth = root.depth + 1
     assign_depth(c) 
 
 def print_tree(root, space = ""):
-  logging.info(space + "- " + root.name + "_" +  str(root.depth) + ("~" if root.is_leaf else ""))
+  logging.info(space + "- " + root.name + "_" +  str(root.depth) + ("~" if root.is_leaf() else ""))
   new_space = space + "-"
   for c in root.children:
     print_tree(c, new_space)

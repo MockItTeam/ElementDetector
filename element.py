@@ -23,7 +23,8 @@ class Description:
   TextArea = "TextArea"
   Panel = "Panel"
   VideoPlayer = "VideoPlayer"
-  Text = "Text"
+  TextLabel = "TextLabel"
+  ImagePlaceholder = "ImagePlaceholder"
 
 class Element:
   def __init__(self, e_id, vertices, name):
@@ -99,7 +100,7 @@ class Element:
 class TextElement(Element):
   def __init__(self, e_id, vertices, name, text):
     Element.__init__(self, e_id, vertices, name)    
-    self.description = Description.Text
+    self.description = Description.TextLabel
     self.text = text
 
   def as_json(self, details=""):
