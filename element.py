@@ -1,5 +1,6 @@
 import util
 from shapely.geometry import Point
+from sets import Set
 # from enum import Enum
 
 SQUARE_THRESHOLD = 0.2
@@ -16,6 +17,10 @@ class Description:
   Rectangle = "Rectangle"
   HorizontalRectangle = "HorizontalRectangle"
   VerticalRectangle = "VerticalRectangle"
+  TriangleUp = "TriangleUp"
+  TriangleDown = "TriangleDown"
+  TriangleLeft = "TriangleLeft"
+  TriangleRight = "TriangleRight"
 
   # Tertiary
   Root = "Root"
@@ -25,6 +30,17 @@ class Description:
   VideoPlayer = "VideoPlayer"
   TextLabel = "TextLabel"
   ImagePlaceholder = "ImagePlaceholder"
+
+  RELATIONSHIP = {
+    Square:  {Quadrilateral},
+    Rectangle: {Quadrilateral},
+    HorizontalRectangle: {Quadrilateral, Rectangle},
+    VerticalRectangle: {Quadrilateral, Rectangle},
+    TriangleUp: {Triangle},
+    TriangleDown: {Triangle},
+    TriangleLeft: {Triangle},
+    TriangleRight: {Triangle}
+  }
 
 class Element:
   def __init__(self, e_id, vertices, name):
@@ -82,8 +98,7 @@ class Element:
   #   return self.polygon.intersects
 
   def is_a(self, description):
-    # TODO: subclass equivalent
-    return description == self.description
+    return description == self.description or (Description.RELATIONSHIP.has_key(self.description) and len(Description.RELATIONSHIP[self.description].intersection({description})) == 1)
 
   def __lt__(self, other):
     return self.polygon.area < other.polygon.area

@@ -29,15 +29,14 @@ class ElementDetector:
   def destroy_all_children_of_triangle(self, root):
     if root.is_a(Description.Triangle):
       for i in range(len(root.children)):
-        logging.info("Destroyed because its parent is Triangle: " + root.children[i].name)
+        logging.info("Destroyed because its parent ('" + root.name + "') is Triangle: " + root.children[i].name)
       self.destroy_all_children(root)
 
     for c in root.children:
       self.destroy_all_children_of_triangle(c)
 
   def detect_image_placeholder(self, root):
-    # TODO: root.is_a should be able to detect with hierachy of element
-    if len(root.children) == 4 and (root.is_a(Description.HorizontalRectangle) or root.is_a(Description.VerticalRectangle)) and util.all_are(root.children, Description.Triangle):
+    if len(root.children) == 4 and (root.is_a(Description.Quadrilateral)) and util.all_are(root.children, Description.Triangle):
       root.description = Description.ImagePlaceholder
       logging.info("Found ImagePlaceholder Rect: %s" % (root.name))
       root.name = root.description
