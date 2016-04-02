@@ -29,11 +29,21 @@ class ElementDetector:
   def destroy_all_children_of_triangle(self, root):
     if root.is_a(Description.Triangle):
       for i in range(len(root.children)):
-        logging.info("Destroyed because its parent is Triangle: " + root.children[i].name)
+        logging.info("Destroyed because its parent ('" + root.name + "') is Triangle: " + root.children[i].name)
       self.destroy_all_children(root)
 
     for c in root.children:
       self.destroy_all_children_of_triangle(c)
+
+  def detect_image_placeholder(self, root):
+    if len(root.children) == 4 and (root.is_a(Description.Quadrilateral)) and util.all_are(root.children, Description.Triangle):
+      root.description = Description.ImagePlaceholder
+      logging.info("Found ImagePlaceholder Rect: %s" % (root.name))
+      root.name = root.description
+      self.destroy_all_children(root)
+
+    for c in root.children:
+      self.detect_image_placeholder(c)
 
   def detect_video_player(self, root):
     if len(root.children) == 1 and root.is_a(Description.HorizontalRectangle) and root.children[0].is_a(Description.Triangle):
@@ -67,15 +77,17 @@ class ElementDetector:
 
   def append_text_elements(self, filename, root, last_id):
     pass
+    return 
     if self.ocr:
       response = self.ocr.detect_text(filename)
+      if not bool(response):
+        logging.info("No texts found.")
+        return
       logging.info(response)
+
       texts = response[0]["description"].split("\n")
       texts = texts[:len(texts)-1]
-      # texts = ["hello", "world"]
-      
-      print texts
-      print len(texts)
+
       for i in range(len(texts)):
         text = texts[i]
         print text
@@ -134,6 +146,9 @@ class ElementDetector:
     root_element = Element(0, [Point(0, 0), Point(0, height), Point(width, height), Point(width, 0)], "Root")
     root_element.description = Description.Root
     root_area = root_element.polygon.area
+    root_width = root_element.width
+    print root_width
+
     size_threshold = (0.05 / 100 * root_area)
 
     last_number = 0
@@ -148,13 +163,17 @@ class ElementDetector:
         if self.gui:
           self.gui.raw_draw(tmpimg, vertices, util.rand_color(), str(number))
         
-        vertices = util.reduce_vertex_by_length(vertices, 0.1)
+        vertices = util.reduce_vertex_by_length(vertices, 0.01 * root_width)
+
         vertices = util.reduce_vertex_by_angle(vertices, 160)
-        vertices = util.reduce_vertex_by_length(vertices, 0.2)
+        vertices = util.reduce_vertex_by_average_length(vertices, 0.2)
         vertices = util.reduce_vertex_by_angle(vertices, 145)
-        vertices = util.reduce_vertex_by_length(vertices, 0.25)
+        vertices = util.reduce_vertex_by_average_length(vertices, 0.25)
         vertices = util.reduce_vertex_by_angle(vertices, 130)
-        # vertices = util.reduce_vertex_by_length(vertices, 0.3)
+
+        vertices = util.reduce_vertex_by_average_length(vertices, 0.1)
+
+        # vertices = util.reduce_vertex_by_average_length(vertices, 0.3)
 
         vertex_count = len(vertices)
 
@@ -188,6 +207,7 @@ class ElementDetector:
     self.append_text_elements(filename, root_element, last_number)
     self.destroy_all_children_of_triangle(root_element)
     self.detect_video_player(root_element)
+    self.detect_image_placeholder(root_element)
     self.detect_panel(root_element)
     self.interpret_leaf_rectangle(root_element)
 
