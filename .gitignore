@@ -2,4 +2,4 @@
 *.pyc
 shapely_inf
 out/
-step/
+#step/
