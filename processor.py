@@ -90,7 +90,7 @@ class ElementDetector:
 
       for i in range(len(texts)):
         text = texts[i]
-        print text
+        # print text
         # vertice = response[0]["boundingPoly"]["vertices"][i]
        
         # TODO: Generate Unique ID
