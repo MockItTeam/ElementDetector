@@ -151,10 +151,11 @@ def get_vertices(approx):
   return vertices
 
 def rand_color():
-  r = random.randint(0, 255)
-  g = random.randint(0, 255)
-  b = random.randint(0, 255)
-  return r, g, b
+  # r = random.randint(0, 255)
+  # g = random.randint(0, 255)
+  # b = random.randint(0, 255)
+  # return r, g, b
+  return 255,100,0
 
 def construct_tree_by_within(elements):
   elements.sort()
