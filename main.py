@@ -2,16 +2,16 @@ import sys
 import logging
 import argparse
 
-from PyQt4 import QtGui
 from gui import ImageDebuggerGUI
 from processor import ElementDetector
-from google import VisionAPI
+
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
   parser.add_argument("-d", "--debug", help="Enable console debugging", default=False)
   parser.add_argument("-g", "--gui", help="Enable GUI debugging", default=False)
   parser.add_argument("-f", "--filename", help="Input image file", required=True)
+  parser.add_argument("-o", "--ocr", help="Enable OCR", default=False)
   args = parser.parse_args()
   
   is_gui_debugging = args.gui
@@ -19,11 +19,15 @@ if __name__ == "__main__":
   if args.debug:
     logging.getLogger().addHandler(logging.StreamHandler())
 
-  ocr = VisionAPI()
   detector = ElementDetector()
-  detector.ocr = ocr
+  
+  if (args.ocr):
+    from google import VisionAPI
+    ocr = VisionAPI()
+    detector.ocr = ocr
 
   if (is_gui_debugging):
+    from PyQt4 import QtGui
     app = QtGui.QApplication(sys.argv)
     gui = ImageDebuggerGUI()
     detector.gui = gui
