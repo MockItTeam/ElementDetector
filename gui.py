@@ -12,17 +12,6 @@ class ImageDebuggerGUI(QtGui.QWidget):
     grid_layout.setSpacing(10)
     group_box.setLayout(grid_layout)
 
-    # self.l1 = QtGui.QLabel("Threshold")
-    # self.l1.setAlignment(QtCore.Qt.AlignCenter)
-    # layout.addWidget(self.l1)
-    # self.sl = QtGui.QSlider(QtCore.Qt.Horizontal)
-    # self.sl.setMinimum(40)
-    # self.sl.setMaximum(100)
-    # self.sl.setValue(3)
-    # self.sl.setTickPosition(QtGui.QSlider.TicksBelow)
-    # self.sl.setTickInterval(1)
-    # layout.addWidget(self.sl, 0, 0)
-
     scroll_area = QtGui.QScrollArea()
     scroll_area.setWidget(group_box)
     scroll_area.setWidgetResizable(True)

@@ -108,7 +108,7 @@ class ElementDetector:
         root.add_child(element)
 
   def detect(self, filename):
-    img = cv2.imread(filename)
+    img = cv2.imread(filename, cv2.IMREAD_COLOR)
     self.step.log(img)
     prefer_height = 1000.0
     raw_height = img.shape[0]
@@ -118,6 +118,7 @@ class ElementDetector:
     self.step.log(img)
 
     after_img = img.copy()
+    original_img = img.copy()
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     self.step.log(img)
 
@@ -141,7 +142,7 @@ class ElementDetector:
     
     img = cv2.Canny(img, 128, 200) # min max
     self.step.log(img)
-
+    # after_img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     
     # if self.gui:
       # self.gui.show_image(1, img, 900)
@@ -158,6 +159,22 @@ class ElementDetector:
 
     size_threshold = (0.05 / 100 * root_area)
 
+    ### SHOW_WITHOUT_PREPROCESSING
+    img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    if self.step.active:
+      last_number = 0
+      for number, cnt in enumerate(contours):
+        last_number = number
+        if hierarchy[0, number, 3] == -1:
+          approx = cv2.approxPolyDP(cnt, 0.01 * cv2.arcLength(cnt, True), True)
+          vertices = util.get_vertices(approx)
+          self.step.draw_vertices(img, vertices, (0, 0, 255), str(number))
+          self.step.draw_vertices(original_img, vertices, (0, 0, 255), str(number))
+      self.step.log(img)
+      self.step.log(original_img)
+    ###
+
+
     last_number = 0
     for number, cnt in enumerate(contours):
       last_number = number
@@ -173,18 +190,11 @@ class ElementDetector:
         self.step.log_vertices(before_img, vertices, (0, 0, 255), str(number))
 
         vertices = util.reduce_vertex_by_length(vertices, 0.01 * root_width)
-        before_img = after_img.copy()
-        self.step.log_vertices(before_img, vertices, (0, 0, 255), str(number))
-
         vertices = util.reduce_vertex_by_angle(vertices, 160)
         vertices = util.reduce_vertex_by_average_length(vertices, 0.2)
         vertices = util.reduce_vertex_by_angle(vertices, 145)
         vertices = util.reduce_vertex_by_average_length(vertices, 0.25)
         vertices = util.reduce_vertex_by_angle(vertices, 130)
-
-        before_img = after_img.copy()
-        self.step.log_vertices(before_img, vertices, (0, 0, 255), str(number))
-
         vertices = util.reduce_vertex_by_average_length(vertices, 0.1)
 
         before_img = after_img.copy()
