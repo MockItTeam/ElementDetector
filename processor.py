@@ -11,7 +11,8 @@ class ElementDetector:
 
   def __init__(self):
     self.ocr = None
-    self.gui = None
+    # self.gui = None
+    self.step = None
 
   def destroy_all_children(self, root):
     for i in range(len(root.children)):
@@ -90,7 +91,6 @@ class ElementDetector:
 
       for i in range(len(texts)):
         text = texts[i]
-        # print text
         # vertice = response[0]["boundingPoly"]["vertices"][i]
        
         # TODO: Generate Unique ID
@@ -108,36 +108,44 @@ class ElementDetector:
         root.add_child(element)
 
   def detect(self, filename):
-    img = cv2.imread(filename)
+    img = cv2.imread(filename, cv2.IMREAD_COLOR)
+    self.step.log(img)
     prefer_height = 1000.0
     raw_height = img.shape[0]
     raw_width = img.shape[1]
     size_factor = prefer_height / raw_height
     img = cv2.resize(img, (int(raw_width * size_factor), int(prefer_height)))
-    
+    self.step.log(img)
 
+    after_img = img.copy()
+    original_img = img.copy()
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img = cv2.GaussianBlur(img, (11, 11), 0)
+    self.step.log(img)
 
+    img = cv2.GaussianBlur(img, (11, 11), 0)
+    self.step.log(img)
+    
     img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 51, 5)
+    self.step.log(img)
     # src, result_intensity, method, type, block, area, weight_sum                   
     # cv2.ADAPTIVE_THRESH_GAUSSIAN_C
     # cv2.THRESH_OTSU cv2.THRESH_BINARY
             
     img = cv2.bitwise_not(img)
 
-    if self.gui:
-      self.gui.show_image(0, img, 900)
+    # if self.gui:
+      # self.gui.show_image(0, img, 900)
     
     height, width = img.shape
-    newimg = np.zeros((height, width, 3), np.uint8)
-    tmpimg = np.zeros((height, width, 3), np.uint8)
-    redimg = np.zeros((height, width, 3), np.uint8)
+    before_img = None
+    final_img = np.zeros((height, width, 3), np.uint8)
     
     img = cv2.Canny(img, 128, 200) # min max
-
-    if self.gui:
-      self.gui.show_image(1, img, 900)
+    self.step.log(img)
+    # after_img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+    
+    # if self.gui:
+      # self.gui.show_image(1, img, 900)
 
     # cv2.cv.CV_RETR_EXTERNAL cv2.cv.CV_RETR_LIST
     contours, hierarchy = cv2.findContours(img, cv2.cv.CV_RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
@@ -147,9 +155,25 @@ class ElementDetector:
     root_element.description = Description.Root
     root_area = root_element.polygon.area
     root_width = root_element.width
-    print root_width
+    # print root_width
 
     size_threshold = (0.05 / 100 * root_area)
+
+    ### SHOW_WITHOUT_PREPROCESSING
+    img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    if self.step.active:
+      last_number = 0
+      for number, cnt in enumerate(contours):
+        last_number = number
+        if hierarchy[0, number, 3] == -1:
+          approx = cv2.approxPolyDP(cnt, 0.01 * cv2.arcLength(cnt, True), True)
+          vertices = util.get_vertices(approx)
+          self.step.draw_vertices(img, vertices, (0, 0, 255), str(number))
+          self.step.draw_vertices(original_img, vertices, (0, 0, 255), str(number))
+      self.step.log(img)
+      self.step.log(original_img)
+    ###
+
 
     last_number = 0
     for number, cnt in enumerate(contours):
@@ -160,25 +184,29 @@ class ElementDetector:
         vertices = util.get_vertices(approx)
         vertex_count = len(vertices)
 
-        if self.gui:
-          self.gui.raw_draw(tmpimg, vertices, util.rand_color(), str(number))
-        
-        vertices = util.reduce_vertex_by_length(vertices, 0.01 * root_width)
+        # if self.gui:
+          # self.gui.raw_draw(before_img, vertices, util.rand_color(), str(number))
+        before_img = after_img.copy()
+        self.step.log_vertices(before_img, vertices, (0, 0, 255), str(number))
 
+        vertices = util.reduce_vertex_by_length(vertices, 0.01 * root_width)
         vertices = util.reduce_vertex_by_angle(vertices, 160)
         vertices = util.reduce_vertex_by_average_length(vertices, 0.2)
         vertices = util.reduce_vertex_by_angle(vertices, 145)
         vertices = util.reduce_vertex_by_average_length(vertices, 0.25)
         vertices = util.reduce_vertex_by_angle(vertices, 130)
-
         vertices = util.reduce_vertex_by_average_length(vertices, 0.1)
 
-        # vertices = util.reduce_vertex_by_average_length(vertices, 0.3)
+        before_img = after_img.copy()
+        self.step.log_vertices(before_img, vertices, (0, 0, 255), str(number))
 
+        # vertices = util.reduce_vertex_by_average_length(vertices, 0.3)
         vertex_count = len(vertices)
 
-        if self.gui:
-          self.gui.raw_draw(redimg, vertices, util.rand_color(), str(number))
+        # if self.gui:
+        #   self.gui.raw_draw(after_img, vertices, util.rand_color(), str(number))
+        self.step.log_vertices(after_img, vertices, (255, 0, 0), str(number))
+        self.step.draw_vertices(final_img, vertices, (0, 255, 0), str(number))
 
         if (vertex_count == 3):
           e = TriangleElement(number, vertices, "Tri#" + str(number))
@@ -193,15 +221,15 @@ class ElementDetector:
         else:
           pass
 
-    if self.gui:
-      self.gui.show_image(2, tmpimg, 900)
-    if self.gui:
-      self.gui.show_image(3, redimg, 900)
+    self.step.log(final_img)
+    # if self.gui:
+    #   self.gui.show_image(2, before_img, 900)
+    # if self.gui:
+    #   self.gui.show_image(3, after_img, 900)
 
     elements = util.remove_resembling_element(elements, 0.5)
     elements.append(root_element)
     
-
     # START HANDLING ELEMENTS AS TREE
     util.construct_tree_by_within(elements) # use root_element from now on
     self.append_text_elements(filename, root_element, last_number)
@@ -211,13 +239,14 @@ class ElementDetector:
     self.detect_panel(root_element)
     self.interpret_leaf_rectangle(root_element)
 
-    if self.gui:
-      self.gui.draw_tree(newimg, root_element)
+    # if self.gui:
+    #   self.gui.draw_tree(newimg, root_element)
 
     util.print_tree(root_element)
     
-    if self.gui:
-      self.gui.show_image(4, newimg, 900)
+    # self.step.tree_log(root_element)
+    # if self.gui:
+    #   self.gui.show_image(4, newimg, 900)
 
     util.assign_depth(root_element)
     json_result = ""
