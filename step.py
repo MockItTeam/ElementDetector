@@ -8,11 +8,14 @@ class StepDebugger:
   def log(self, img):
     pass
 
-  def vertices_log(self, img, vertices, color, tag):
+  def draft_vertices(self, img, vertices, color):
     pass
 
-  # def log(self, img):
-  #   pass
+  def draw_vertices(self, img, vertices, color, tag):
+    pass
+
+  def log_vertices(self, img, vertices, color, tag):
+    pass
 
 class FileWriterStepDebugger(StepDebugger):
   def __init__(self):
