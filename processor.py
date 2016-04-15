@@ -110,7 +110,7 @@ class ElementDetector:
   def detect(self, filename):
     img = cv2.imread(filename, cv2.IMREAD_COLOR)
     if img is None:
-      return "{}";
+      return '{"error_message": "Can\'t open file\'' + filename + '\'"}'
 
     self.step.log(img)
     prefer_height = 1000.0
