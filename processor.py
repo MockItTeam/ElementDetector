@@ -109,6 +109,9 @@ class ElementDetector:
 
   def detect(self, filename):
     img = cv2.imread(filename, cv2.IMREAD_COLOR)
+    if img is None:
+      return "{}";
+
     self.step.log(img)
     prefer_height = 1000.0
     raw_height = img.shape[0]
@@ -249,13 +252,15 @@ class ElementDetector:
     #   self.gui.show_image(4, newimg, 900)
 
     util.assign_depth(root_element)
-    json_result = ""
-    json_result += "{"
+    json_result = "{"
+    json_result += '"error_message": null,'
+    json_result += '"json_elements": {'
     json_result += '"width":' + str(width) + ','
     json_result += '"height":' + str(height) + ','
     json_result += '"elements":['
     json_result += self.traverse_as_json(root_element)
     json_result += "]"
+    json_result += "}"
     json_result += "}"
 
     return json_result

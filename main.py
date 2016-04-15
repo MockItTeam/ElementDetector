@@ -1,12 +1,16 @@
 import sys
 import logging
 import argparse
+import json
+import traceback
 
 # from gui import ImageDebuggerGUI
 from processor import ElementDetector
 from step import FileWriterStepDebugger, StepDebugger
+from timeout import timeout
 
-if __name__ == "__main__":
+@timeout(60)
+def init_processor():
   parser = argparse.ArgumentParser()
   parser.add_argument("-d", "--debug", help="Enable console debugging", default=False)
   # parser.add_argument("-g", "--gui", help="Enable GUI debugging", default=False)
@@ -16,7 +20,10 @@ if __name__ == "__main__":
   args = parser.parse_args()
   
   # is_gui_debugging = args.gui
-  logging.basicConfig(filename='out/debug.log',level=logging.DEBUG)
+  debug_output = "/tmp/mockit-processor.log"
+  open(debug_output, "w+")
+  logging.basicConfig(filename=debug_output ,level=logging.DEBUG)
+  
   if args.debug:
     logging.getLogger().addHandler(logging.StreamHandler())
 
@@ -46,3 +53,11 @@ if __name__ == "__main__":
     # gui.show()
     # sys.exit(app.exec_())
   
+if __name__ == "__main__":
+  try:
+    init_processor()
+  except:
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+    error_message = ''.join(line for line in lines)
+    print '{"error_message":' + json.dumps(error_message) + '}'

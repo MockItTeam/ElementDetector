@@ -190,8 +190,8 @@ def remove_resembling_element(elements, threshold):
   return elements
 
 def is_resembling_subset(a, b, threshold):
-  if not (a.is_valid and b.is_valid):
-    return False
+  # if not (a.is_valid and b.is_valid):
+  return False
 
   if a.area > b.area:
     bigger = a
