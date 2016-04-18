@@ -190,6 +190,7 @@ class ElementDetector:
         # if self.gui:
           # self.gui.raw_draw(before_img, vertices, util.rand_color(), str(number))
         before_img = after_img.copy()
+        self.step.draw_vertices(before_img, util.get_bounding_vertices(vertices), (0, 255, 255), "")
         self.step.log_vertices(before_img, vertices, (0, 0, 255), str(number))
 
         vertices = util.reduce_vertex_by_length(vertices, 0.01 * root_width)
@@ -201,6 +202,7 @@ class ElementDetector:
         vertices = util.reduce_vertex_by_average_length(vertices, 0.1)
 
         before_img = after_img.copy()
+        self.step.draw_vertices(before_img, util.get_bounding_vertices(vertices), (0, 255, 255), "")
         self.step.log_vertices(before_img, vertices, (0, 0, 255), str(number))
 
         # vertices = util.reduce_vertex_by_average_length(vertices, 0.3)

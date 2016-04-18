@@ -150,6 +150,16 @@ def get_vertices(approx):
     vertices.append(Point(approx[i][0][0], approx[i][0][1]))
   return vertices
 
+def get_bounding_vertices(vertices):
+  if len(vertices) == 0:
+    return []
+  padding = 20
+  min_x = min(vertices, key=lambda v: v.x).x - padding
+  min_y = min(vertices, key=lambda v: v.y).y - padding
+  max_x = max(vertices, key=lambda v: v.x).x + padding
+  max_y = max(vertices, key=lambda v: v.y).y + padding
+  return [Point(min_x, min_y), Point(min_x, max_y), Point(max_x, max_y), Point(max_x, min_y)]
+
 def rand_color():
   # r = random.randint(0, 255)
   # g = random.randint(0, 255)

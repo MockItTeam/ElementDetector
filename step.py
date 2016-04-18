@@ -1,5 +1,6 @@
 import cv2
 import util
+import os
 
 class StepDebugger:
   def __init__(self):
@@ -9,7 +10,7 @@ class StepDebugger:
     pass
 
   def draft_vertices(self, img, vertices, color):
-    pass
+   pass
 
   def draw_vertices(self, img, vertices, color, tag):
     pass
@@ -22,12 +23,13 @@ class FileWriterStepDebugger(StepDebugger):
     StepDebugger.__init__(self)
     self.active = True
     self.count = 0
-    # import os
-    # os.system('rm -r step/*.jpg')
+    self.directory = "/tmp/mockit-step"
+    if not os.path.exists(self.directory):
+      os.makedirs(self.directory)
 
   def log(self, img):
     self.count += 1
-    tmp = "step/{0:05d}.jpg".format(self.count)
+    tmp = (self.directory + "/{0:05d}.jpg").format(self.count)
     cv2.imwrite(tmp, img)
 
   def draft_vertices(self, img, vertices, color):
