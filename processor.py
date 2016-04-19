@@ -77,8 +77,6 @@ class ElementDetector:
       self.interpret_leaf_rectangle(c)
 
   def append_text_elements(self, filename, root, last_id):
-    pass
-    return 
     if self.ocr:
       response = self.ocr.detect_text(filename)
       if not bool(response):
