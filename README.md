@@ -1,6 +1,6 @@
 # ElementDetector
 
-1. Clone repository:
+1. Clone repository
 
   `$ git clone https://github.com/MockItTeam/ElementDetector`
 
@@ -11,3 +11,7 @@
 3. (Optional) for OCR, setup Google Credentails
   
   `export GOOGLE_APPLICATION_CREDENTIALS=`
+
+4. Test sample image
+  
+  `python main.py -f img/test8.jpg`
