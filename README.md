@@ -1,5 +1,8 @@
 # ElementDetector
 
+0. Install OpenCV 2.4.10
+
+
 1. Clone repository
 
   `$ git clone https://github.com/MockItTeam/ElementDetector`
@@ -15,3 +18,4 @@
 4. Test sample image
   
   `python main.py -f img/test8.jpg`
+
